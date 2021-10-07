@@ -1,0 +1,312 @@
+---
+title: "One-year follow-up"
+subtitle: "Supplementary Material"
+author: "Innsbruck PAH registry"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+
+output: 
+  pdf_document:
+    latex_engine: xelatex
+bibliography: pah_biblio.bib
+csl: frontiers-in-immunology.csl
+header-includes:
+  \usepackage{longtable}
+  \usepackage{tabu}
+  \usepackage{caption}
+  \usepackage{makecell}
+  \usepackage{pdflscape}
+  \usepackage{array}
+  \usepackage{booktabs}
+  \usepackage{threeparttable}
+  \usepackage{threeparttablex}
+  \usepackage{wrapfig}
+  \usepackage{multirow}
+  \usepackage[normalem]{ulem}
+  \usepackage{colortbl}
+  \usepackage{xcolor}
+  \usepackage{float} \floatplacement{figure}{H} \floatplacement{table}{H}
+  \newcommand{\beginsupplement}{\setcounter{table}{0}  \renewcommand{\thetable}{S\arabic{table}}       \setcounter{figure}{0} \renewcommand{\thefigure}{S\arabic{figure}}}
+---
+
+```{r, setup, include = FALSE}
+
+library(bookdown)
+
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, dev = "cairo_pdf")
+
+
+```
+
+\newpage
+\beginsupplement
+
+# Supplementary Methods
+
+## Data transformation, visualization, descriptive statistic
+
+Data transformation, analysis and result visualization was accomplished by R version 4.0.5 with _tidyverse_ environment. Figures were generated with _cowplot_ package [@Wilke2019], Supplementary Material file was built with _rmarkdown_ environment (packages _knitr_, _rmarkdown_, _kableExtra_ and _bookdown_) [@Xie2016]. 
+
+For univariable survival modeling and construction of candidate risk signatures, a set of categorical `r nrow(pah_study$mod_variables)` demographic, biochemical, right-heart catheter, laboratory, ultrasound and lung function parameters recorded at PH diagnosis was used. For the list of modeling variables and their stratification scheme, see: __Supplementary Table \@ref(tab:tab-study-variables)__.
+
+## Hypothesis testing, multiple comparisons
+
+As the majority of the analyzed numeric variables were non-normally distributed as checked by Shapiro-Wilk test, differences in median values between analysis groups were investigated by Mann-Whitney and Kruskal-Wallis test, as appropriate. Differences in survival between groups were compared by Kaplan-Meier (KM) analysis, Mentel-Henszel and log-rank test [@Harrington1982], as appropriate. KM analysis and visualization of its results were done with tools provided by _survival_ and _survminer_ packages [@Kassambara2016] and home-developed wrappers (https://github.com/PiotrTymoszuk/KM-Toolbox).
+
+For each analysis and cohort, p values were corrected for multiple comparisons with Benjamini-Hochberg method [@Benjamini1995]. 
+
+## Univariable Cox survival modeling
+
+Association of candidate categorical variables (__Supplementary Table \@ref(tab:tab-study-variables)__) with overall survival time was assessed by series of univariable Cox proportional hazard models constructed for the Innsbruck and Linz/Vienna cohort using _survival_ package [@Therneau2000] and home-developed wrappers (https://github.com/PiotrTymoszuk/KM-Toolbox). Significance of the hazard ratio estimates was determined by Wald Z test. P values were corrected for multiple comparisons with Benjamini-Hochberg method [@Benjamini1995]. For the full modeling results, see: __Supplementary Table \@ref(tab:tab-uni-cox)__.
+
+## Development of custom risk signatures
+
+Candidate risk signatures (n = `r length(multi_modeling$training_models$models)`) were constructed as all possible combinations of 2 - 4 modeling variables (__Supplementary Table \@ref(tab:tab-study-variables)__). The development and selection of significant risk signatures involved a 3-step procedure (__Figure 3A__):
+
+__(1) Identification of the significant signatures in the training Innsbruck cohort.__ Correlation of the candidate signatures with overall survival time was investigated in the training Innsbruck cohort by multivariable Cox proportional hazard modeling (_survival_ package_) [@Therneau2000]. Out of `r length(multi_modeling$training_models$models)` tested signatures a total of `r length(multi_modeling$training_signif$models)` variable combinations displayed (__A__) significant hazard ratios for all model components (Wald Z test), (__B__) significant Harrell's  concordance index (C-index, 2.5% confidence interval limit > 0.5, _concordance()_ function, _survival_ package) [@Harrell1996; @Therneau2000] and (__C__) Benjamini-Hochberg-adjusted significance in likelihood ratio test versus the respective NULL model. For complete multivariable Cox modeling results in the test cohort, see: __Supplementary Table \@ref(tab:tab-multi-cox)__.
+
+__(2) Cross-validation (CV) in the training Innsbruck cohort.__ Ability of the signatures identified in Step 1 to reproduciblly predict overall survival in the training Innsbruck cohort was assessed with 20-fold cross-validation essentially as described in [@Simon2011]. Briefly, for each training - test split of the Innsbruck cohort and the given variable combination, a multi-parameter Cox model was constructed in the training subset, and its linear predictor values calculated in the test subset. Association of the linear predictor score in the test subset with survival was measured by C-index statistic. Out of the `r length(multi_modeling$training_signif$models)` signatures subjected to CV, `r length(multi_modeling$cv_pass$models)` showed significant C-index values (2.5% confidence interval limit > 0.5). 
+
+__(3) External validation in the test Linz/Vienna cohort.__ The external validation procedure was based on procedure described in [@Royston2013]. For the signatures passing the CV selection in Step 2 linear predictor scores based on the training cohort Cox model estimates (see: __Supplementary Table \@ref(tab:tab-score-formulas)__ for the formulas) were calculated in the test Linz/Vienna cohort. Correlation of the linear predictor scores with overall survival in the testing cohort was assessed by Cox proportional hazard modeling and C-index statistic. All `r length(multi_modeling$cv_pass$models)` CV-passing risk signatures demonstrated significant association with overall survival in the test cohort
+
+Values of mean squared errors and C-indexes in the training cohort (Step 1), cross-validation (Step 2) and test (Step 3) cohort are presented in __Figure 2__ and __Supplementary Figure \@ref(fig:fig-fit-errors)__.
+
+## Modeling of 5-year mortality
+
+Linear predictor scores for the developed `r length(multi_modeling$cv_pass$models)` risk signatures were calculated in the test Innsbruck and training Linz/Vienna cohort. Association of the score values with 5-year mortality was assessed with logistic regression (generalized linear modeling, log-link function, binomial family) and receiver-operator characteristic (ROC). Optimal score cutoffs were determined by maximizing the Youden J statistic. Score cutoff, sensitivity, specificity and area-under the curve value determination were done with _optimal.cutpoints_ package [@Lopez-Raton2014]. ROC curve plotting was accomplished by _plotROC_ package tools [@Sachs2017].
+
+## Clustering
+
+Clustering of the study participants in respect to numeric values of six-minute walking distance, WHO functional classification, sex (0: male, 1: female), age at diagnosis and 5-year mortality (0: survivor, 1: deceased) was performed with DBSCAN algorithm (_minPts_ = 5, Euclidean distance, package _dbscan_ and https://github.com/PiotrTymoszuk/cluster_tools) [@Ester1996; @Hahsler2019] separately in the Innsbruck and Linz/Vienna cohorts. The optimal _eps_ value was determined by inspection of the plot of 5-nearest neighbor distance plot as described [@Belyadi2016]. By this means 3 participant subsets in each cohort were identified. To visualize the clustering assignment, the clustering variables were subjected to two-dimensional principal component analysis (PCA) using _pcaPP_ package (function _PCAgrid()_) [@Croux2007] and PCA scores for each observation displayed in a point plot.
+
+# Data and code availability
+
+The study data set is available at serious request to the corresponding author. The analysis R code was deposited on GitHub (https://github.com/PiotrTymoszuk/PAH-biomarker).
+
+\newpage
+
+# Supplementary Tables {#sec:tables}
+
+```{r tab-study-variables}
+
+suppl_tables$study_vars[1, 1] %>% 
+  mutate(Variable = '') %>% 
+  kable(caption = '\\textbf{Study variables.} Variable: variable name used in R code, Variable label: variable label used in plots and tables, Variable type: indicator whether the variable was used as a modeling response, independent variable (signature development) or comparator risk tool. Stratification: variable stratification scheme.\\\\The table is available online.', 
+        format = 'latex', 
+        escape = T, 
+        booktabs = T, 
+        longtable = F, 
+        col.names = '')
+
+```
+
+```{r tab-uni-cox}
+
+suppl_tables$univariable_cox[1, 1] %>% 
+  mutate(Cohort = '') %>% 
+  kable(caption = '\\textbf{Results of univariable Cox proportional hazard modeling.} Variable: variable name and strata, HR: hazard ratio with 95$\\%$ confidence interval, N: number of complete observations, pFDR: Benjamini-Hochberg-corrected p value for HR significance.\\\\The table is available online.', 
+        format = 'latex', 
+        escape = T, 
+        booktabs = T, 
+        longtable = F, 
+        col.names = '')
+
+```
+
+```{r tab-multi-cox}
+
+suppl_tables$multivariable_cox[1, 1] %>% 
+  mutate(Signature = '') %>% 
+  kable(caption = '\\textbf{Results of multivariable Cox proportional hazard modeling for the candidate risk signatures in the training Innsbruck cohort.} Significant HRs: indicator if all model betas were significant, pLRT FDR: Benjamini-Hochberg-corrected p value for the likelihood ratio test, pWald FDR: Benjamini-Hochberg-corrected p value for the Wald test, C: concordance index with 95$\\%$ confidence intervals,  N: number of complete observations.\\\\The table is available online.', 
+        format = 'latex', 
+        escape = T, 
+        booktabs = T, 
+        longtable = F, 
+        col.names = '')
+
+```
+
+\newpage
+
+```{r tab-comparator-cox}
+
+suppl_tables$comparator_cox %>% 
+  kable(caption = '\\textbf{Results of multivariable Cox proportional hazard modeling for the established PH risk assessment tools in the training Innsbruck and test Linz/Vienna cohort.} pLRT FDR: Benjamini-Hochberg-corrected p value for the likelihood ratio test, pWald FDR: Benjamini-Hochberg-corrected p value for the Wald test, C: concordance index with 95$\\%$ confidence intervals,  N: number of complete observations.', 
+        format = 'latex', 
+        escape = T, 
+        booktabs = T, 
+        longtable = T) %>% 
+  column_spec(1, width = '1cm') %>% 
+  column_spec(2, width = '2cm') %>% 
+  column_spec(3:4, width = '2cm') %>% 
+  column_spec(5, width = '3cm') %>% 
+  column_spec(6, width = '1cm') %>%
+  collapse_rows(columns = 1) %>% 
+  kable_styling(full_width = F, 
+                latex_options = c('striped', 
+                                  'hold_position'))
+
+```
+
+\newpage
+
+```{r tab-score-formulas}
+
+suppl_tables$score_formulas %>% 
+  mutate(`Score formula` = stri_replace(`Score formula`, 
+                                        fixed = '\u2265', 
+                                        replacement = '$\\geq$')) %>% 
+  kable(caption = '\\textbf{Formulas of linear predictor scores for the developed risk signatures.}', 
+        format = 'latex', 
+        escape = F, 
+        booktabs = T, 
+        longtable = T) %>% 
+  column_spec(1, width = '3cm') %>% 
+  column_spec(2, width = '12cm') %>%  
+  kable_styling(full_width = F, 
+                latex_options = c('striped', 
+                                  'hold_position'))
+
+```
+
+\newpage
+
+```{r tab-roc}
+
+suppl_tables$roc_auc %>% 
+  kable(caption = '\\textbf{Prediction of 5-year mortality by the developed signatures and established PH risk assessment tools investigated by receiver-operator characteristic.} J: Youden J statistic, AUC: area under the ROC curve with 95$\\%$ confidence interval.', 
+        format = 'latex', 
+        escape = T, 
+        booktabs = T, 
+        longtable = T) %>% 
+  column_spec(1, width = '0.7cm') %>% 
+  column_spec(2, width = '3cm') %>% 
+  column_spec(3:6, width = '1.5cm') %>% 
+  column_spec(7, width = '4cm') %>% 
+  collapse_rows(columns = 1) %>% 
+  kable_styling(full_width = F, 
+                latex_options = c('striped', 
+                                  'hold_position'))
+
+```
+
+\newpage
+
+# Supplementary Figures {#sec:figures}
+
+```{r fig-fit-errors, fig.width = mm_inch(suppl_figures$fit_errors$w), fig.height = mm_inch(suppl_figures$fit_errors$h), dpi = 600, fig.cap = 'Fit errors and overall survival prediction performance for the significant risk signatures.'}
+
+suppl_figures$fit_errors$plot
+
+```
+
+__Supplementary Figure \@ref(fig:fig-fit-errors). Fit errors and overall survival prediction performance for the significant risk signatures.__
+
+Correlation of the candidate 2 - 4 parameter risk signatures (all possible combinations of `r nrow(pah_study$mod_variables)` variables, __Supplementary Table \@ref(tab:tab-study-variables)__) with overall survival (OS) in the Innsbruck training cohort (IBK) was investigated by Cox proportional hazard modeling and verified by 20-fold cross-validation (CV) (__Figure 3__). Model fit parameters (MSE: mean squared error) and prediction accuracy measures (concordance index: C-index) for the `r length(multi_modeling$cv_pass$models)` developed significant signatures are presented.
+
+__(A, B)__ MSE in the training cohort, cross-validation and test cohort.
+
+__(C)__ C-index values with 95% confidence intervals in the training and cross-validation.
+
+\newpage
+
+```{r fig-five-stats, fig.width = mm_inch(suppl_figures$five_surv_stats$w), fig.height = mm_inch(suppl_figures$five_surv_stats$h), dpi = 600, fig.cap = 'Sensitivity and specificity at predicting 5-year mortality.'}
+
+suppl_figures$five_surv_stats$plot
+
+```
+
+__Supplementary Figure \@ref(fig:fig-five-stats). Sensitivity and specificity at predicting 5-year mortality for the developed risk signature and established PH risk assessment tools.__
+
+Association of the developed risk signatures (__Figure 3__) and established PH risk assessment tools with 5-year mortality was assessed with receiver-operator characteristic (ROC, __Supplementary Table \@ref(tab:tab-roc)__). Optimal risk score value was determined by the maximum of Youden J statistic. Sensitivity (__A__), specificity (__B__) and J values at the score cutoff in the training Innsbruck (IBK) and the test Linz/Vienna (LZ/W) cohorts are shown.
+
+\newpage
+
+```{r fig-cox-estimates, fig.width = mm_inch(suppl_figures$cox_estimates$w), fig.height = mm_inch(suppl_figures$cox_estimates$h), dpi = 600, fig.cap = 'Hazard ratio estimates of the Cox model components for the developed risk signatures 309 and 2525.'}
+
+suppl_figures$cox_estimates$plot
+
+```
+
+__Supplementary Figure \@ref(fig:fig-cox-estimates). Hazard ratio estimates of the Cox model components for the developed risk signatures 309 and 2525.__
+
+The risk signatures predicting overall survival in PH were developed as presented in __Figures 3__. Values of hazard ratio estimates of the Cox proportional hazard models for the Signatures 309 and 2525 in the training Innsbruck (IBK) cohort are shown with 95% confidence intervals. Mean squared errors (MSE), concordance indexes (C) with 95% confidence intervals and significance in likelihood ratio test (pLRT) are displayed in the plot captions.
+
+\newpage
+
+```{r fig-km, fig.width = mm_inch(suppl_figures$km_curves$w), fig.height = mm_inch(suppl_figures$km_curves$h), dpi = 600, fig.cap = 'Values of the risk signatures 309 and 2525 scores and overall survival.'}
+
+suppl_figures$km_curves$plot
+
+```
+
+__Supplementary Figure \@ref(fig:fig-km). Values of the risk signatures 309 and 2525 scores and overall survival.__
+
+The risk signatures predicting overall survival in PH were developed as presented in __Figures 3__. The signature linear scores (__Supplementary Table \@ref(tab:tab-score-formulas)__) in the training Innsbruck (IBK) and test Linz/Vienna cohort (LZ/W) were stratified by quartiles (Q1: 1^st^, Q2: 2^nd^, Q3: 3^rd^ and Q4: 4^th^) and the survival differences between the score strata were compares by Kaplan-Meier analysis and log-rank test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plots.
+
+\newpage
+
+```{r fig-roc, fig.width = mm_inch(suppl_figures$roc_curves$w), fig.height = mm_inch(suppl_figures$roc_curves$h), dpi = 600, fig.cap = 'Values of the risk signatures 309 and 2525 scores and 5-year survival analyzed by receiver-operator characteristic.'}
+
+suppl_figures$roc_curves$plot
+
+```
+
+__Supplementary Figure \@ref(fig:fig-roc). Values of the risk signatures 309 and 2525 scores and 5-year survival analyzed by receiver-operator characteristic.__
+
+The risk signatures predicting overall survival in PH were developed as presented in __Figures 3__. The ability of the signature linear scores (__Supplementary Table \@ref(tab:tab-score-formulas)__) to predict five-year survival in the training Innsbruck (IBK) and test Linz/Vienna cohort (LZ/W) was assessed with receiver-operator characteristic (ROC, __Supplementary Table \@ref(tab:tab-roc)__). ROC curves for the signatures 309 and 2525 and the established PH risk assessement tools are shown.
+
+\newpage
+
+```{r fig-gender-surv, fig.width = mm_inch(suppl_figures$gender_surv$w), fig.height = mm_inch(suppl_figures$gender_surv$h), dpi = 600, fig.cap = 'Interplay of gender and age affects PH survival independently of functional classification, motility and NT-pro-BNP levels.'}
+
+suppl_figures$gender_surv$plot
+
+```
+
+__Supplementary Figure \@ref(fig:fig-gender-surv). Interplay of gender and age affects PH survival independently of functional classification, motility and NT-pro-BNP levels.__
+
+__(A)__ Differences in PH survival between the participants stratified by age class and sex (IBK: Innsbruck, LZ/W: Linz/Vienna cohort) were assessed by Kaplan-Meier analysis and Mentel-Henszel test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plots. Numbers of males and females in the age strata are indicated below the plots.
+
+__(B)__ Differences in WHO functional classification (WHO FC), six-minute walking distance (SMWD) and circulating NT-pro-BNP levels at PH diagnosis in the participants stratified by age class and sex were assessed by Kruskal-Wallis test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plot captions.
+
+\newpage
+
+```{r fig-gender-signatures, fig.width = mm_inch(suppl_figures$gender_signatures$w), fig.height = mm_inch(suppl_figures$gender_signatures$h), dpi = 600, fig.cap = 'Values of the risk signatures 309 and 2525 scores in gender and age strata.'}
+
+suppl_figures$gender_signatures$plot
+
+```
+
+__Supplementary Figure \@ref(fig:fig-gender-signatures). Values of the risk signatures 309 and 2525 scores in gender and age strata.__
+
+The risk signatures predicting overall survival in PH were developed as presented in __Figures 3__. The differences in  the signature linear scores (__Supplementary Table \@ref(tab:tab-score-formulas)__) between the participants stratified by age class and sex (IBK: Innsbruck, LZ/W: Linz/Vienna cohort) were assessed by Kruskal-Wallis test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plot captions. IBK $\leq$ 65: male n = `r gender$n_numbers$IBK_young$n[1]`, female n = `r gender$n_numbers$IBK_young$n[2]`, IBK >65: male n = `r gender$n_numbers$IBK_elderly$n[1]`, female n = `r gender$n_numbers$IBK_elderly$n[2]`, 
+LZ/W $\leq$ 65: male n = `r gender$n_numbers$LZ_young$n[1]`, female n = `r gender$n_numbers$LZ_young$n[2]`, LZ/W >65: male n = `r gender$n_numbers$LZ_elderly$n[1]`, female n = `r gender$n_numbers$LZ_elderly$n[2]`.
+
+\newpage
+
+```{r fig-gender-comparators, fig.width = mm_inch(suppl_figures$gender_comparators$w), fig.height = mm_inch(suppl_figures$gender_comparators$h), dpi = 600, fig.cap = 'Scoring by the established PH risk assessment tools in gender and age strata.'}
+
+suppl_figures$gender_comparators$plot
+
+```
+
+__Supplementary Figure \@ref(fig:fig-gender-comparators). Scoring by the established PH risk assessment tools in gender and age strata.__
+
+The differences in scoring by the established PH risk assessment tools between the participants stratified by age class and sex (IBK: Innsbruck, LZ/W: Linz/Vienna cohort) were assessed by Kruskal-Wallis test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plot captions. IBK $\leq$ 65: male n = `r gender$n_numbers$IBK_young$n[1]`, female n = `r gender$n_numbers$IBK_young$n[2]`, IBK >65: male n = `r gender$n_numbers$IBK_elderly$n[1]`, female n = `r gender$n_numbers$IBK_elderly$n[2]`, 
+LZ/W $\leq$ 65: male n = `r gender$n_numbers$LZ_young$n[1]`, female n = `r gender$n_numbers$LZ_young$n[2]`, LZ/W >65: male n = `r gender$n_numbers$LZ_elderly$n[1]`, female n = `r gender$n_numbers$LZ_elderly$n[2]`.
+
+\newpage
+
+```{r fig-gender-reveal, fig.width = mm_inch(suppl_figures$gender_reveal$w), fig.height = mm_inch(suppl_figures$gender_reveal$h), dpi = 600, fig.cap = 'Scoring by the REVEAL risk assessment tools in gender and age strata.'}
+
+suppl_figures$gender_reveal$plot
+
+```
+
+__Supplementary Figure \@ref(fig:fig-gender-reveal). Scoring by the REVEAL risk assessment tools in gender and age strata.__
+
+The differences in REVEAL 2.0 and REVEAL Lite scoring between the participants stratified by age class and sex in the Innsbruck (IBK) cohort were assessed by Kruskal-Wallis test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plot captions. IBK $\leq$ 65: male n = `r gender$n_numbers$IBK_young$n[1]`, female n = `r gender$n_numbers$IBK_young$n[2]`, IBK >65: male n = `r gender$n_numbers$IBK_elderly$n[1]`, female n = `r gender$n_numbers$IBK_elderly$n[2]`.
+
+\newpage
+
+# References
