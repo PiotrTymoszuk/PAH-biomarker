@@ -704,7 +704,7 @@
                             level_dictionary$parameter)
     
     cox_model_terms <- dic_vector[names(cox_model$coefficients)]
-    cox_model_estimates <- signif(exp(cox_model$coefficients), signif_digits)
+    cox_model_estimates <- signif(cox_model$coefficients, signif_digits)
     
     score_formula <- map2(cox_model_estimates, 
                           cox_model_terms, 

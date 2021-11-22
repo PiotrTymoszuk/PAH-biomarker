@@ -54,7 +54,7 @@
   pah_study$data_master <- pah_study$data_master %>% 
     filter(PH_I_IV  == 0, 
            timepoint %in% c('IBK_0', 'LZ_0')) %>% 
-    mutate(age_class = binarize(age_fc, 65, right = T), 
+    mutate(age_class = binarize(age_fc, 60, right = T), 
            sex = car::recode(Gender, "0 = 'male'; 1 = 'female'") %>% 
              factor(c('male', 'female')), 
            mPAP_class = binarize(mPAP, 49, right = F), ## https://doi.org/10.1093/ejechocard/jeq011

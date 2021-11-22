@@ -30,12 +30,12 @@
                                            multi_plots$c_plots$testing_c + 
                                              labs(subtitle = 'Cox proportional hazard modeling'), 
                                            nrow = 2,
-                                           rel_heights = c(0.2, 0.8), 
+                                           rel_heights = c(0.18, 0.82), 
                                            labels = LETTERS, 
                                            label_size = 10) %>% 
     as_figure_object(figure_label = 'figure_3_signatures_os', 
                      w = 180, 
-                     h = 190)
+                     h = 210)
   
 # Figure 4: 5-year survival -----
   
@@ -48,85 +48,80 @@
                                                labs(subtitle = 'Logistic modeling') + 
                                                theme(legend.position = 'bottom'), 
                                              nrow = 2, 
-                                             rel_heights = c(0.17, 0.83), 
+                                             rel_heights = c(0.15, 0.85), 
                                              labels = LETTERS, 
                                              label_size = 10) %>% 
     as_figure_object(figure_label = 'figure_4_signatures_five', 
                      w = 180, 
-                     h = 220)
+                     h = 230)
   
-# Figure 5: participant clustering ----
+# Figure 5: Gender and age-specific survival differences -----
   
-  insert_msg('Figure 5: clustering')
+  insert_msg('Figure 5: gender/age interplay and survival')
   
-  ## upper panel
+  ## the top panel
   
-  paper_figures$clustering$upper_panel <- study_clust$pca_plots[c('IBK_0', 'LZ_0')] %>% 
-    map(function(x) x + theme(legend.position = 'none', 
-                              plot.subtitle = element_blank())) %>% 
-    plot_grid(plotlist = ., 
-              ncol = 2, 
-              align = 'hv') %>% 
-    plot_grid(get_legend(study_clust$pca_plots$IBK_0 + 
-                           theme(legend.position = 'bottom')), 
-              nrow = 2, 
-              rel_heights = c(0.87, 0.13))
-  
-  ## middle panel
-  
-  paper_figures$clustering$middle_panel <- clust_features$plots[c('IBK_0', 'LZ_0')] %>% 
+  paper_figures$gender_surv$upper_panel <- gender$os$plots[c('IBK_young', 
+                                                             'LZ_young', 
+                                                             'IBK_elderly', 
+                                                             'LZ_elderly')] %>% 
     map(function(x) x + theme(legend.position = 'none')) %>% 
     plot_grid(plotlist = ., 
               ncol = 2, 
               align = 'hv') %>% 
-    plot_grid(get_legend(clust_features$plots$IBK_0), 
-              nrow = 2, 
-              rel_heights = c(0.85, 0.15))
+    plot_grid(get_legend(gender$os$plots$IBK_young + 
+                           theme(legend.position = 'right')), 
+              ncol = 2, 
+              rel_widths = c(0.9, 0.1))
   
   ## bottom panel
   
-  paper_figures$clustering$bottom_panel <- clust_os$plots[c('IBK_0', 'LZ_0')] %>% 
-    map(function(x) x + theme(plot.tag = element_blank(), 
-                              legend.position = 'none')) %>% 
-    plot_grid(plotlist = .,
+  paper_figures$gender_surv$bottom_panel <- list(gender$funct$plots$IBK_0$WHOFc, 
+                                                 gender$funct$plots$LZ_0$WHOFc, 
+                                                 gender$funct$plots$IBK_0$SMWD,
+                                                 gender$funct$plots$LZ_0$SMWD, 
+                                                 gender$funct$plots$IBK_0$NTproBNP, 
+                                                 gender$funct$plots$LZ_0$NTproBNP) %>% 
+    map(function(x) x + theme(legend.position = 'none', 
+                              axis.text.x = element_blank(), 
+                              plot.tag = element_blank())) %>% 
+    plot_grid(plotlist = ., 
               ncol = 2, 
               align = 'hv') %>% 
-    plot_grid(get_legend(clust_os$plots$IBK_0), 
-              nrow = 2, 
-              rel_heights = c(0.87, 0.13))
+    plot_grid(get_legend(gender$funct$plots$IBK_0$SMWD), 
+              ncol = 2, 
+              rel_widths = c(0.9, 0.1))
   
   ## complete figure
   
-  paper_figures$clustering <- plot_grid(paper_figures$clustering$upper_panel, 
-                                        paper_figures$clustering$middle_panel, 
-                                        paper_figures$clustering$bottom_panel, 
-                                        nrow = 3, 
-                                        rel_heights = c(1, 0.6, 1), 
-                                        labels = LETTERS, 
-                                        label_size = 10) %>% 
-    as_figure_object(figure_label = 'figure_5_clustering', 
+  paper_figures$gender_surv <- plot_grid(paper_figures$gender_surv$upper_panel, 
+                                         paper_figures$gender_surv$bottom_panel, 
+                                         nrow = 2, 
+                                         rel_heights = c(0.4, 0.6), 
+                                         labels = LETTERS, 
+                                         label_size = 10) %>% 
+    as_figure_object(figure_label = 'figure_5_gender_survival', 
                      w = 180, 
-                     h = 220)
+                     h = 230)
   
-# Figure 6: risk scores in the participant clusters -----
+# Figure 6: Developed risk scores in the age and gender strata -----  
   
-  insert_msg('Risk scores in the participant clusters')
+  insert_msg('Figure 6: risk scores in the age and gender strata')
   
-  paper_figures$cluster_risk_scales <- plot_grid(clust_scores$heat_map + 
-                                                   theme(legend.position = 'bottom', 
-                                                         plot.tag = element_blank(),
-                                                         axis.text.x = element_text(angle = 90, 
-                                                                                    hjust = 1, 
-                                                                                    vjust = 0.5)), 
-                                                 clust_scores$signif_bar, 
-                                                 ncol = 2, 
-                                                 align = 'hv',
-                                                 axis = 'tblr', 
-                                                 labels = LETTERS,
-                                                 label_size = 10) %>% 
-    as_figure_object(figure_label = 'figure_6_clustering_scores', 
+  paper_figures$gender_signatures <- list(gender$funct$plots$IBK_0$sign_2525, 
+                                          gender$funct$plots$LZ_0$sign_2525) %>% 
+    map(function(x) x + theme(axis.text.x = element_blank(), 
+                              legend.position = 'none', 
+                              plot.tag = element_blank())) %>% 
+    plot_grid(plotlist = ., 
+              ncol = 2, 
+              align = 'hv') %>% 
+    plot_grid(get_legend(gender$funct$plots$IBK_0$sign_2525), 
+              ncol = 2, 
+              rel_widths = c(0.9, 0.1)) %>% 
+    as_figure_object(figure_label = 'figure_5_signatures_gender', 
                      w = 180, 
-                     h = 120)
+                     h = 80)
   
 # Supplementary Figure S1: fit errors of the significant signatures in the train cohort, cv and test cohort -----
     
@@ -173,140 +168,66 @@
                      w = 180, 
                      h = 180)
   
-# Supplementary Figure S3: Cox estimates of the signatures of interest ----
+# Supplementary Figure S3: Cox estimates, KM and ROC curves for the best-performing signature 2525 ----
   
   insert_msg('Figure S3: Cox estimates of the signatures of interest')
+  
+  ## top panel
 
-  suppl_figures$cox_estimates <- plot_grid(multi_plots$signature_forests$sign_309, 
-                                           multi_plots$signature_forests$sign_2525, 
-                                           ncol = 2, 
-                                           align = 'hv', 
-                                           labels = LETTERS, 
-                                           label_size = 10) %>% 
-    as_figure_object(figure_label = 'figure_s3_cox_estimates_selected', 
-                     w = 180, 
-                     h = 90)
+  suppl_figures$best_sign$upper_panel <- plot_grid(multi_plots$signature_forests$sign_2525, 
+                                                   ggdraw(), 
+                                                   ncol = 2, 
+                                                   align = 'hv', 
+                                                   labels = LETTERS, 
+                                                   label_size = 10)
   
-# Supplementary Figure S4: KM curves for the signatures of interest -----
+  ## middle panel
   
-  suppl_figures$km_curves <- list(km$plots$IBK_0$sign_309, 
-                                  km$plots$LZ_0$sign_309, 
-                                  km$plots$IBK_0$sign_2525, 
-                                  km$plots$LZ_0$sign_2525) %>% 
-    map(function(x) x + theme(legend.position = 'none', 
-                              plot.tag = element_blank())) %>% 
+  suppl_figures$best_sign$middle_panel <- list(km$plots$IBK_0$sign_2525, 
+                                               km$plots$LZ_0$sign_2525) %>% 
+  map(function(x) x + theme(legend.position = 'none', 
+                            plot.tag = element_blank())) %>% 
     plot_grid(plotlist = ., 
               ncol = 2, 
-              align = 'hv', 
-              labels = c('A', '', 'B'), 
-              label_size = 10) %>% 
+              align = 'hv') %>% 
     plot_grid(., get_legend(km$plots$IBK_0$sign_2525 + 
                               theme(legend.position = 'right')), 
               ncol = 2, 
-              rel_widths = c(0.9, 0.1)) %>% 
-    as_figure_object(figure_label = 'figure_s4_km_selected', 
-                     w = 180, 
-                     h = 120)
-  
-# Supplementary Figure S5: ROC curves, 5-year survival for the signatures of interest ----
-  
-  insert_msg('Figure S5: ROC curves, 5-year survival, signatures of interest')
-  
-  suppl_figures$roc_curves <- list(five_surv$roc_plots$IBK_0$sign_309, 
-                                   five_surv$roc_plots$LZ_0$sign_309, 
-                                   five_surv$roc_plots$IBK_0$sign_2525, 
-                                   five_surv$roc_plots$LZ_0$sign_2525) %>% 
-    map(function(x) x + theme(legend.position = 'none')) %>% 
-    plot_grid(plotlist = ., 
-              ncol = 2, 
-              align = 'hv', 
-              labels = c('A', '', 'B'), 
-              label_size = 10) %>% 
-    plot_grid(get_legend(five_surv$roc_plots$IBK_0$sign_301 + 
-                           scale_color_manual(labels = c(globals$comp_labs, 
-                                                         set_names('Developed', 'sign_301')), 
-                                              values = c(globals$comp_colors, 
-                                                         set_names('black', 'sign_301')), 
-                                              name = '')), 
-              ncol = 2, 
-              rel_widths = c(0.8, 0.2)) %>% 
-    as_figure_object(figure_label = 'figure_s5_roc_selected', 
-                     w = 180, 
-                     h = 160)
-  
-# Supplementary Figure S6: Gender and age-specific survival differences -----
-  
-  insert_msg('Figure S6: gender/age interplay and survival')
-  
-  ## the top panel
-  
-  suppl_figures$gender_surv$upper_panel <- gender$os$plots[c('IBK_young', 
-                                                             'LZ_young', 
-                                                             'IBK_elderly', 
-                                                             'LZ_elderly')] %>% 
-    map(function(x) x + theme(legend.position = 'none')) %>% 
-    plot_grid(plotlist = ., 
-              ncol = 2, 
-              align = 'hv') %>% 
-    plot_grid(get_legend(gender$os$plots$IBK_young + 
-                           theme(legend.position = 'right')), 
-              ncol = 2, 
-              rel_widths = c(0.9, 0.1))
+              rel_widths = c(0.85, 0.15))
   
   ## bottom panel
   
-  suppl_figures$gender_surv$bottom_panel <- list(gender$funct$plots$IBK_0$WHOFc, 
-                                                 gender$funct$plots$LZ_0$WHOFc, 
-                                                 gender$funct$plots$IBK_0$SMWD,
-                                                 gender$funct$plots$LZ_0$SMWD, 
-                                                 gender$funct$plots$IBK_0$NTproBNP, 
-                                                 gender$funct$plots$LZ_0$NTproBNP) %>% 
-    map(function(x) x + theme(legend.position = 'none', 
-                              axis.text.x = element_blank(), 
-                              plot.tag = element_blank())) %>% 
+  suppl_figures$best_sign$bottom_panel <- list(five_surv$roc_plots$IBK_0$sign_2525, 
+                                               five_surv$roc_plots$LZ_0$sign_2525) %>% 
+    map(function(x) x + theme(legend.position = 'none')) %>% 
     plot_grid(plotlist = ., 
               ncol = 2, 
               align = 'hv') %>% 
-    plot_grid(get_legend(gender$funct$plots$IBK_0$SMWD), 
+    plot_grid(get_legend(five_surv$roc_plots$IBK_0$sign_2525 + 
+                           scale_color_manual(labels = c(globals$comp_labs, 
+                                                         set_names('Sign 2525', 'sign_2525')), 
+                                              values = c(globals$comp_colors, 
+                                                         set_names('black', 'sign_2525')), 
+                                              name = '')), 
               ncol = 2, 
-              rel_widths = c(0.9, 0.1))
+              rel_widths = c(0.85, 0.15))
   
   ## complete figure
   
-  suppl_figures$gender_surv <- plot_grid(suppl_figures$gender_surv$upper_panel, 
-                                         suppl_figures$gender_surv$bottom_panel, 
-                                         nrow = 2, 
-                                         rel_heights = c(0.4, 0.6), 
-                                         labels = LETTERS, 
-                                         label_size = 10) %>% 
-    as_figure_object(figure_label = 'figure_s6_gender_survival', 
+  suppl_figures$best_sign <- plot_grid(suppl_figures$best_sign$upper_panel, 
+                                       suppl_figures$best_sign$middle_panel, 
+                                       suppl_figures$best_sign$bottom_panel, 
+                                       nrow = 3, 
+                                       rel_heights = c(0.8, 1, 1), 
+                                       labels = LETTERS, 
+                                       label_size = 10) %>% 
+    as_figure_object(figure_label = 'figure_s3_best_signature', 
                      w = 180, 
-                     h = 230)
+                     h = 210)
+
+# Supplementary Figure S4: comparator scores in the age and gender strata -----
   
-# Supplementary Figure S7: Developed risk scores in the age and gender strata -----  
-  
-  insert_msg('Figure S7: risk scores in the age and gender strata')
-  
-  suppl_figures$gender_signatures <- list(gender$funct$plots$IBK_0$sign_309 , 
-                                          gender$funct$plots$LZ_0$sign_309, 
-                                          gender$funct$plots$IBK_0$sign_2525, 
-                                          gender$funct$plots$LZ_0$sign_2525) %>% 
-    map(function(x) x + theme(axis.text.x = element_blank(), 
-                              legend.position = 'none', 
-                              plot.tag = element_blank())) %>% 
-    plot_grid(plotlist = ., 
-              ncol = 2, 
-              align = 'hv') %>% 
-    plot_grid(get_legend(gender$funct$plots$IBK_0$sign_2525), 
-              ncol = 2, 
-              rel_widths = c(0.9, 0.1)) %>% 
-    as_figure_object(figure_label = 'figure_s7_signatures_gender', 
-                     w = 180, 
-                     h = 120)
-  
-# Supplementary Figure S8: comparator scores in the age and gender strata -----
-  
-  insert_msg('Figure S8: comparator scores in the age and gender strata')
+  insert_msg('Figure S4: comparator scores in the age and gender strata')
   
   suppl_figures$gender_comparators <- list(gender$funct$plots$IBK_0$mRASP, 
                                            gender$funct$plots$LZ_0$mRASP, 
@@ -327,13 +248,13 @@
     plot_grid(get_legend(gender$funct$plots$IBK_0$mRASP), 
               ncol = 2, 
               rel_widths = c(0.9, 0.1)) %>% 
-    as_figure_object(figure_label = 'figure_s8_comparator_gender', 
+    as_figure_object(figure_label = 'figure_s4_comparator_gender', 
                      w = 180, 
                      h = 220)
   
-# Supplementary Figure S9: Reveal scores in the age and gender strata -----
+# Supplementary Figure S5: Reveal scores in the age and gender strata -----
   
-  insert_msg('Figure S9 Reveal scores in the age and gender strata')
+  insert_msg('Figure S5 Reveal scores in the age and gender strata')
   
   suppl_figures$gender_reveal <- list(gender$funct$plots$IBK_0$Reveal2_risk_3_cat, 
                                       gender$funct$plots$IBK_0$Reveal_lite2_3_cat) %>% 
@@ -346,7 +267,7 @@
     plot_grid(get_legend(gender$funct$plots$IBK_0$Reveal2_risk_3_cat), 
               ncol = 2, 
               rel_widths = c(0.9, 0.1)) %>% 
-    as_figure_object(figure_label = 'figure_s9_reveal_gender', 
+    as_figure_object(figure_label = 'figure_s5_reveal_gender', 
                      w = 180, 
                      h = 60)
   

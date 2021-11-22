@@ -104,35 +104,7 @@
                 'N', 
                 'Cohort'))
   
-# Supplementary Table S4: performance of the comparators in the study cohorts ----
-  
-  insert_msg('Table S3: comparators in the study cohorts')
-  
-  suppl_tables$comparator_cox <- multi_modeling$comparators$stats %>% 
-    map2_dfr(., c('IBK', 'LZ/W'), ~mutate(.x, cohort = .y)) %>% 
-    mutate(p_lrt_adj = signif(p_lrt_adj, 2), 
-           p_wald_adj = signif(p_wald_adj, 2),
-           c_index = paste0(signif(c_index, 2), 
-                            ' [', 
-                            signif(lower_ci, 2), 
-                            ' - ', 
-                            signif(upper_ci, 2), 
-                            ']'), 
-           model_id = globals$comp_labs[model_id]) %>% 
-    select(cohort, 
-           model_id,
-           p_lrt_adj, 
-           p_wald_adj, 
-           c_index, 
-           n) %>% 
-    set_names(c('Cohort', 
-                'Risk scale', 
-                'pLRT FDR', 
-                'pWald FDR', 
-                'C', 
-                'N'))
-  
-# Supplementary Table S5: Formulas of the best signature scores passing the CV validation -----
+# Supplementary Table S4: Formulas of the best signature scores passing the CV validation -----
   
   insert_msg('Table S4: formulas of the best signature scores')
   
@@ -140,7 +112,7 @@
                                         `Score formula` = unlist(multi_plots$signature_score_formulas)) %>% 
     mutate(Signature = stri_replace(Signature, fixed = 'sign_', replacement = 'Signature '))
   
-# Supplementary Table S6: AUC values of the signature scores and comparators at predicting the 5-year survival -----
+# Supplementary Table S5: AUC values of the signature scores and comparators at predicting the 5-year survival -----
   
   insert_msg('Table S5: ROC AUC values for the 5-year survival')
   

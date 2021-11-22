@@ -87,15 +87,15 @@
   gender$gender_colors <- c('male' = 'steelblue', 
                             'female' = 'indianred')
   
-  gender$time_labs <- c('IBK, \u2264 65 years', 
-                        'IBK, > 65 years', 
-                        'LZ/W, \u2264 65 years', 
-                        'LZ/W, > 65 years') 
+  gender$time_labs <- c('IBK, \u2264 60 years', 
+                        'IBK, > 60 years', 
+                        'LZ/W, \u2264 60 years', 
+                        'LZ/W, > 60 years') 
   
-  gender$group_labs <- c('M \u226465', 
-                         'F \u226465', 
-                         'M >65', 
-                         'F >65') %>% 
+  gender$group_labs <- c('M \u226460', 
+                         'F \u226460', 
+                         'M >60', 
+                         'F >60') %>% 
     set_names(levels(gender$analysis_tbl$IBK_young$study_group))
   
   gender$group_colors <- c('steelblue1', 
