@@ -7,6 +7,16 @@
   paper_figures <- list()
   suppl_figures <- list()
   
+# Figure 1: STROBE ----
+  
+  insert_msg('Figure 1: STROBE')
+  
+  paper_figures$strobe <- plot_grid(ggdraw() + 
+                                      draw_image('./aux files/strobe.png')) %>% 
+    as_figure_object(figure_label = 'figure_1_strobe', 
+                     w = 180, 
+                     h = 150)
+  
 # Figure 2: results of univariate Cox modeling ------
   
   insert_msg('Figure 2: univariate Cox modeling')
@@ -76,12 +86,26 @@
   
   ## bottom panel
   
-  paper_figures$gender_surv$bottom_panel <- list(gender$funct$plots$IBK_0$WHOFc, 
-                                                 gender$funct$plots$LZ_0$WHOFc, 
+  paper_figures$gender_surv$bottom_panel <- list(gender$funct$plots$IBK_0$WHOFc + 
+                                                   scale_y_continuous(breaks = 1:4, 
+                                                                      labels = c('I', 'II', 'III', 'IV'), 
+                                                                      limits = c(1, 4)), 
+                                                 gender$funct$plots$LZ_0$WHOFc + 
+                                                   scale_y_continuous(breaks = 1:4, 
+                                                                      labels = c('I', 'II', 'III', 'IV'), 
+                                                                      limits = c(1, 4)), 
                                                  gender$funct$plots$IBK_0$SMWD,
                                                  gender$funct$plots$LZ_0$SMWD, 
-                                                 gender$funct$plots$IBK_0$NTproBNP, 
-                                                 gender$funct$plots$LZ_0$NTproBNP) %>% 
+                                                 gender$funct$plots$IBK_0$NTproBNP + 
+                                                   scale_y_continuous(breaks = c(1e1, 1e2, 1e3, 1e4, 1e5), 
+                                                                      trans = 'log10', 
+                                                                      labels = c('10', '100', '1000', '10000', '100000'), 
+                                                                      limits = c(1e1, 1e5)), 
+                                                 gender$funct$plots$LZ_0$NTproBNP + 
+                                                   scale_y_continuous(breaks = c(1e1, 1e2, 1e3, 1e4, 1e5), 
+                                                                      trans = 'log10', 
+                                                                      labels = c('10', '100', '1000', '10000', '100000'), 
+                                                                      limits = c(1e1, 1e5))) %>% 
     map(function(x) x + theme(legend.position = 'none', 
                               axis.text.x = element_blank(), 
                               plot.tag = element_blank())) %>% 

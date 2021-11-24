@@ -41,13 +41,15 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, dev = "cai
 
 # Figures {#sec:figures}
 
-```{r fig-consort, fig.width = mm_inch(paper_figures$uni_cox$w), fig.height = mm_inch(paper_figures$uni_cox$h), dpi = 600, fig.cap = 'CONSORT flow diagram of the study ana analysis inclusion process.'}
+```{r fig-consort, fig.width = mm_inch(paper_figures$strobe$w), fig.height = mm_inch(paper_figures$strobe$h), dpi = 600, fig.cap = 'CONSORT flow diagram of the study ana analysis inclusion process.'}
 
-ggdraw()
+paper_figures$strobe$plot
 
 ```
 
 __Figure \@ref(fig:fig-consort). CONSORT flow diagram of the study analysis inclusion process.__
+
+PH: pulmonary hypertension, PHC: right heart catheterization, CTEPH: chronic thromboembolic pulmonary hypertension.
 
 \newpage
 
@@ -59,7 +61,7 @@ paper_figures$uni_cox$plot
 
 __Figure \@ref(fig:fig-uni-cox). Factors associated with overall survival identified by univariable Cox modeling.__
 
-Correlations of `r nrow(pah_study$mod_variables)` candidate variables (__Supplementary Table S1__) with overall survival was investigated with a series of Cox proportional hazard models in the Innsbruck (IBK) and Linz/Vienna (LZ/W) collective (__Supplementary Table S2__). Hazard ratio (HR) significance was assessed with Wald test and corrected for multiple comparisons with Benjamini-Hochberg method. HR with 95% confidence intervals for the factors correlating significantly with survival in at least one cohort are presented inn the plot. Range of N number of complete observation is shown under the plot.
+Correlations of `r nrow(pah_study$mod_variables)` candidate variables (__Supplementary Table S1__) with overall survival was investigated with a series of Cox proportional hazard models in the Innsbruck (IBK) and Linz/Vienna (LZ/W) PAH collective (__Supplementary Table S2__). Hazard ratio (HR) significance was assessed with Wald test and corrected for multiple comparisons with Benjamini-Hochberg method. HR with 95% confidence intervals for the factors correlating significantly with survival in at least one cohort are presented in the plot. The range of N number of the complete observations is shown under the plot.
 
 \newpage
 
@@ -69,25 +71,25 @@ paper_figures$signatures_os$plot
 
 ```
 
-__Figure \@ref(fig:fig-sign-os). Prediction of overall PH survival by candidate multivariable risk signatures and established risk assessment tools.__
+__Figure \@ref(fig:fig-sign-os). Prediction of overall PAH survival by candidate multivariable risk signatures and established risk assessment tools.__
 
-Correlation of the candidate 2 - 4 parameter risk signatures (all possible combinations of `r nrow(pah_study$mod_variables)` variables, __Supplementary Table S1__) with overall survival (OS) in the Innsbruck training cohort (IBK) was investigated by Cox proportional hazard modeling and verified by 20-fold cross-validation. The association of the linear predictor scores for the significant risk signatures was subsequently tested in the Linz/Vienna (LZ/W) cohort by Cox proportional hazard modeling. Significance of model estimates was determined by Wald test, model relevance was assessed by likelihood ratio test (LRT) and concordance index (C-index). P values were corrected for multiple comparisons with Benjamini-Hochberg method.
+Correlation of the candidate 2 - 4 parameter risk signatures (all possible combinations of `r nrow(pah_study$mod_variables)` variables, __Supplementary Table S1__) with overall survival (OS) in the Innsbruck PAH training cohort (IBK) was investigated by Cox proportional hazard modeling and verified by 20-fold cross-validation. The association of the linear predictor scores for the significant risk signatures was subsequently tested in the Linz/Vienna (LZ/W) cohort by Cox proportional hazard modeling. The significance of model estimates was determined by Wald test, model relevance was assessed by the likelihood ratio test (LRT) and concordance index (C-index). P values were corrected for multiple comparisons with Benjamini-Hochberg method.
 
 __(A)__ Scheme of selection of the developed significant risk signatures.
 
-__(B)__ C-index values with 95% confidence intervals for Cox models of the `r length(multi_modeling$cv_pass$models)` developed significant signatures and the established PH risk assessment tools in the training and test cohorts.
+__(B)__ C-index values with 95% confidence intervals for Cox models of the `r length(multi_modeling$cv_pass$models)` newly developed significant signatures and the established PH risk assessment tools in the training and test cohorts.
 
 \newpage
 
-```{r fig-sign-five, fig.width = mm_inch(paper_figures$signatures_five$w), fig.height = mm_inch(paper_figures$signatures_five$h), dpi = 600, fig.cap = 'Correlation of the developed candidate risk signatures with 5-year mortality.'}
+```{r fig-sign-five, fig.width = mm_inch(paper_figures$signatures_five$w), fig.height = mm_inch(paper_figures$signatures_five$h), dpi = 600, fig.cap = 'Correlation of the newly developed risk signatures with 5-year mortality.'}
 
 paper_figures$signatures_five$plot
 
 ```
 
-__Figure \@ref(fig:fig-sign-five). Correlation of the developed candidate risk signatures with 5-year mortality.__
+__Figure \@ref(fig:fig-sign-five). Correlation of the newly developed risk signatures with 5-year mortality.__
 
-Correlation of normalized linear predictor scores (__Supplementary Table S4__) of the `r length(multi_modeling$cv_pass$models)` developed risk signatures significantly associated with overall survival (__Figure \@ref(fig:fig-sign-os)__) with 5-year mortality in the Innsbruck training (IBK) and Linz/Vinna (LZ/W) cohort was investigated by logistic regression. Odds ratio (OR) significance was determined by Wald test and corrected for multiple comparisons with Benjamini-Hochberg method.
+The correlation of normalized linear predictor scores (__Supplementary Table S4__) of the `r length(multi_modeling$cv_pass$models)` developed risk signatures significantly associated with overall survival (__Figure \@ref(fig:fig-sign-os)__) with 5-year mortality in the Innsbruck training (IBK) and Linz/Vienna (LZ/W) validation PAH cohorts was investigated by logistic regression. Odds ratio (OR) significance was determined by Wald test and corrected for multiple comparisons with Benjamini-Hochberg method.
 
 __(A)__ Scheme of signature testing.
 
@@ -95,27 +97,27 @@ __(B)__ OR values with 95% confidence intervals for the `r length(multi_modeling
 
 \newpage
 
-```{r fig-gender-surv, fig.width = mm_inch(paper_figures$gender_surv$w), fig.height = mm_inch(paper_figures$gender_surv$h), dpi = 600, fig.cap = 'Interplay of gender and age affects PH survival independently of functional classification, motility and NT-pro-BNP levels.'}
+```{r fig-gender-surv, fig.width = mm_inch(paper_figures$gender_surv$w), fig.height = mm_inch(paper_figures$gender_surv$h), dpi = 600, fig.cap = 'The interplay of gender and age affects PAH survival independently of functional classification, six-minute walking distance and NT-pro-BNP levels.'}
 
 paper_figures$gender_surv$plot
 
 ```
 
-__Figure \@ref(fig:fig-gender-surv). Interplay of gender and age affects PH survival independently of functional classification, motility and NT-pro-BNP levels.__
+__Figure \@ref(fig:fig-gender-surv). The interplay of gender and age affects PAH survival independently of functional classification, six-minute walking distance and NT-pro-BNP levels.__
 
-__(A)__ Differences in PH survival between the participants stratified by age class and sex (IBK: Innsbruck, LZ/W: Linz/Vienna cohort) were assessed by Kaplan-Meier analysis and Mentel-Henszel test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plots. Numbers of males and females in the age strata are indicated below the plots.
+__(A)__ Differences in PAH survival between the participants stratified by age class and sex (IBK: Innsbruck, LZ/W: Linz/Vienna cohort) were assessed by Kaplan-Meier analysis and Mentel-Henszel test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plots. The numbers of males and females in the age strata are indicated below the plots.
 
-__(B)__ Differences in WHO functional classification (WHO FC), six-minute walking distance (SMWD) and circulating NT-pro-BNP levels at PH diagnosis in the participants stratified by age class and sex were assessed by Kruskal-Wallis test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plot captions.
+__(B)__  Differences in WHO functional classification (WHO FC), six-minute walking distance (SMWD) and circulating NT-pro-BNP levels at PH diagnosis in the participants stratified by age class and sex were assessed by Kruskal-Wallis test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plot captions.
 
 \newpage
 
-```{r fig-gender-signatures, fig.width = mm_inch(paper_figures$gender_signatures$w), fig.height = mm_inch(paper_figures$gender_signatures$h), dpi = 600, fig.cap = 'Values of the risk signature and 2525 score in gender and age strata.'}
+```{r fig-gender-signatures, fig.width = mm_inch(paper_figures$gender_signatures$w), fig.height = mm_inch(paper_figures$gender_signatures$h), dpi = 600, fig.cap = 'Values of the best performing machine-learning risk signature score in gender and age strata.'}
 
 paper_figures$gender_signatures$plot
 
 ```
 
-__Figure \@ref(fig:fig-gender-signatures). Values of the risk signature 2525 score in gender and age strata.__
+__Figure \@ref(fig:fig-gender-signatures). Values of the best performing machine-learning risk signature score in gender and age strata.__
 
 The risk signatures predicting overall survival in PH were developed as presented in __Figure 3__. The differences in the signature 2525 linear predictor scores (__Supplementary Table S4__) between the participants stratified by age class and sex (IBK: Innsbruck, LZ/W: Linz/Vienna cohort) were assessed by Kruskal-Wallis test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plot captions. IBK $\leq$ 60: male n = `r gender$n_numbers$IBK_young$n[1]`, female n = `r gender$n_numbers$IBK_young$n[2]`, IBK >60: male n = `r gender$n_numbers$IBK_elderly$n[1]`, female n = `r gender$n_numbers$IBK_elderly$n[2]`, 
 LZ/W $\leq$ 60: male n = `r gender$n_numbers$LZ_young$n[1]`, female n = `r gender$n_numbers$LZ_young$n[2]`, LZ/W >60: male n = `r gender$n_numbers$LZ_elderly$n[1]`, female n = `r gender$n_numbers$LZ_elderly$n[2]`.
