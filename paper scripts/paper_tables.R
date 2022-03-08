@@ -4,147 +4,65 @@
   
 # data container ----
   
+  paper_tables <- list()
   suppl_tables <- list()
+  
+# Table 1: cohort characteristic ------
+  
+  insert_msg('Table 1: cohort characteristic')
+  
+  paper_tables$cohort_features <- data_ex$result_table %>% 
+    mutate(variable = translate_vars(variable, value = 'plot_lab', lexicon = data_ex$var_tbl), 
+           variable = ifelse(variable == '', 'N participants', variable)) %>% 
+    set_names(c('Variable', 'IBK', 'LZ/W', 'Significance', 'Effect size'))
   
 # Supplementary Table S1: study variables -----
   
   insert_msg('Table S1: study variables')
   
-  suppl_tables$study_vars$legend <- pah_study$legend
+  suppl_tables$study_vars <- pah_study$legend %>% 
+    filter(variable_type != 'ignore')
   
-  suppl_tables$study_vars$levels <- pah_study$mod_variables$variable %>% 
-    map(function(x) levels(pah_study$data_master[[x]])) %>% 
-    set_names(pah_study$mod_variables$variable) %>% 
-    map_chr(paste, collapse = ', ') %>% 
-    tibble(variable = names(.), 
-           levels = .)
-  
-  suppl_tables$study_vars <- suppl_tables$study_vars %>% 
-    reduce(left_join, by = 'variable') %>% 
-    mutate(variable_type = car::recode(variable_type, "'ignore' = 'numeric'")) %>% 
-    set_names(c('Variable', 
-                'Description', 
-                'Variable label', 
-                'Unit', 
-                'Variable type', 
-                'Stratification'))
-  
+  suppl_tables$study_vars  <- pah_study$level_dict %>% 
+    group_by(variable) %>% 
+    summarise(level = paste(level, collapse = '; ')) %>% 
+    left_join(suppl_tables$study_vars , ., by = 'variable') %>% 
+    select(variable, description, label, unit, level, variable_type) %>% 
+    mutate(variable_type = ifelse(variable_type == 'independent', 'yes', 'no')) %>% 
+    set_names(c('Variable', 'Description', 'Label', 'Unit', 'Stratification', 'Used in risk modeling'))
+
 # Supplementary Table S2: results of univariable Cox modeling -----
   
   insert_msg('Table S1: univariable Cox results')
   
-  suppl_tables$univariable_cox <- uni_modeling$summary %>% 
-    mutate(estimate = paste0(signif(estimate, 3), 
-                             '[', 
-                             signif(lower_ci, 3), 
-                             ' - ', 
-                             signif(upper_ci, 3), 
-                             ']'), 
-           significance = ifelse(p_adjusted < 0.05, 
-                                 paste('p =', signif(p_adjusted, 2)), 
-                                 'ns'), 
-           variable = paste(var_lab, level, sep = ': '), 
-           cohort = globals$center_labs[cohort]) %>% 
-    select(cohort, 
-           variable, 
-           estimate, 
-           n_complete, 
-           significance) %>% 
-    set_names(c('Cohort', 
-                'Variable', 
-                'HR', 
-                'N', 
-                'pFDR'))
+  suppl_tables$univariable_cox <- uni_cox$summary %>% 
+    map_dfr(mutate, 
+            estimate = paste0(signif(estimate, 2), ' [', 
+                              signif(lower_ci, 2), ' - ', 
+                              signif(upper_ci, 2), ']'), 
+            significance = ifelse(p_adjusted >= 0.05, 
+                                  paste0('ns (p = ', signif(p_adjusted, 2), ')'), 
+                                  ifelse(p_adjusted < 0.001, 'p < 0.001', 
+                                         paste('p =', signif(p_adjusted, 2)))), 
+            c_index = paste0(signif(c_index, 2), ' [', signif(c_lower_ci, 2), ' - ', 
+                             signif(c_upper_ci, 2), ']'), 
+            variable = translate_vars(variable), 
+            rsq_mev = as.character(signif(rsq_mev, 2)), 
+            cohort = globals$center_labs[cohort]) %>% 
+    select(cohort, variable, level, order, estimate, significance, c_index, rsq_mev) %>% 
+    set_names(c('Cohort', 'Variable', 'Level', 'Model order', 'HR', 'Significance', 'C index', 'R\u00B2'))
+
+# Table S2 and S3: characteristic of the participant clusters -----
   
-# Supplementary Table S3: complete results of multivariate cox modeling for the candidate signatures in the training cohort -----
+  insert_msg('Tables S2 and S3: characteristic of the participant clusters')
   
-  insert_msg('Table S2: multivariate Cox results')
-  
-  ## variables
-  
-  suppl_tables$multivariable_cox$vars <-  
-    tibble(model_id = names(multi_modeling$training_models$vars), 
-           variables = map(multi_modeling$training_models$vars, 
-                           ~translate_vars(.x)) %>% 
-             map_chr(paste, 
-                     collapse = ', '))
-  
-  ## model stats
-  
-  suppl_tables$multivariable_cox$stats <- multi_modeling$training_summary$stats %>% 
-    mutate(p_lrt_adj = signif(p_lrt_adj, 2), 
-           p_wald_adj = signif(p_wald_adj, 2),
-           c_index = paste0(signif(c_index, 2), 
-                            ' [', 
-                            signif(lower_ci, 2), 
-                            ' - ', 
-                            signif(upper_ci, 2), 
-                            ']'), 
-           cohort = 'IBK') %>% 
-    select(model_id, 
-           signif_estimates,
-           p_lrt_adj, 
-           p_wald_adj, 
-           c_index, 
-           n, 
-           cohort)
-  
-  ## complete table
-  
-  suppl_tables$multivariable_cox <- reduce(suppl_tables$multivariable_cox, 
-                                           left_join, 
-                                           by = 'model_id') %>% 
-    mutate(model_id = stri_replace(model_id, fixed = 'sign_', replacement = 'Signature ')) %>% 
-    set_names(c('Signature', 
-                'Variables', 
-                'Significant HRs',
-                'pLRT FDR', 
-                'pWald FDR', 
-                'C', 
-                'N', 
-                'Cohort'))
-  
-# Supplementary Table S4: Formulas of the best signature scores passing the CV validation -----
-  
-  insert_msg('Table S4: formulas of the best signature scores')
-  
-  suppl_tables$score_formulas <- tibble(Signature = names(multi_plots$signature_score_formulas), 
-                                        `Score formula` = unlist(multi_plots$signature_score_formulas)) %>% 
-    mutate(Signature = stri_replace(Signature, fixed = 'sign_', replacement = 'Signature '))
-  
-# Supplementary Table S5: AUC values of the signature scores and comparators at predicting the 5-year survival -----
-  
-  insert_msg('Table S5: ROC AUC values for the 5-year survival')
-  
-  suppl_tables$roc_auc <- five_surv$roc_modeling$stats %>% 
-    map2_dfr(., c('IBK', 'LZ/W'), ~mutate(.x, cohort = .y)) %>% 
-    mutate(AUC = paste0(signif(AUC, 3), 
-                        ' [', 
-                        signif(lowerCI, 3), 
-                        ' - ', 
-                        signif(upperCI, 3), 
-                        ']'),
-           model_id = ifelse(model_id %in% pah_study$comparators$variable, 
-                             globals$comp_labs[model_id], 
-                             stri_replace(model_id, fixed = 'sign_', replacement = 'Signature ')), 
-           cutoff = signif(cutoff, 2), 
-           Se = signif(Se, 2), 
-           Sp = signif(Sp, 2), 
-           Optimal.criterion = signif(Optimal.criterion, 2)) %>% 
-    select(cohort, 
-           model_id, 
-           cutoff, 
-           Se, 
-           Sp, 
-           Optimal.criterion, 
-           AUC) %>% 
-    set_names(c('Cohort', 
-                'Signature', 
-                'Cutoff', 
-                'Sensitivity', 
-                'Specificity', 
-                'J', 
-                'AUC'))
+  suppl_tables[c('clust_IBK', 'clust_LZ')] <- cl_chara$result_tbl %>% 
+    map(mutate, 
+        variable = translate_vars(variable, value = 'plot_lab', lexicon = data_ex$var_tbl), 
+           variable = ifelse(variable == '', 'N participants', variable), 
+        variable = stri_replace(variable, fixed = 'cm2', replacement = 'cm\u00B2')) %>% 
+    map(set_names, 
+        c('Variable', 'Cluster #1', 'Cluster #2', 'Significance', 'Effect size'))
   
 # Saving on the disc -----
   
@@ -158,11 +76,3 @@
 # END -----
   
   insert_tail()
-  
-
-
-    
-  
-  
-  
-  

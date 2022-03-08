@@ -39,85 +39,104 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, dev = "cai
 
 \newpage
 
+# Tables
+
+```{r tab-cohort, tab.cap = 'Characteristic of the study cohorts.'}
+
+paper_tables$cohort_features %>% 
+  flextable %>% 
+  width(1, width = 2.8, unit = 'cm') %>% 
+  width(2:3, width = 4.6, unit = 'cm') %>% 
+  width(4, width = 2.5, unit = 'cm') %>% 
+  width(5, width = 2, unit = 'cm') %>% 
+  footnote(c(2:4, 6:7, 9, 11:14, 16:18, 20, 23:27), 4, part = 'body', value = as_paragraph('Mann-Whitney U test.', ref_symbols = '1')) %>% 
+  footnote(c(2:4, 6:7, 9, 11:14, 16:18, 20, 23:27), 5, part = 'body', value = as_paragraph('Wilcoxon r effect size statistic.', ref_symbols = '2')) %>% 
+  footnote(c(5, 8, 10, 15, 19, 21:22), 4, part = 'body', value = as_paragraph('\u03C7\u00B2 test.'), ref_symbols = '3') %>% 
+  footnote(c(5, 8, 10, 15, 19, 21:22), 5, part = 'body', value = as_paragraph('Cramer V effect size statistic.'), ref_symbols = '4') %>% 
+  font(part = 'all', fontname = 'Cambria') %>% 
+  fontsize(size = 10, part = 'all') %>% 
+  theme_vanilla
+  
+```
+
+\newpage
+
 # Figures {#sec:figures}
 
-```{r fig-consort, fig.width = mm_inch(paper_figures$strobe$w), fig.height = mm_inch(paper_figures$strobe$h), dpi = 600, fig.cap = 'CONSORT flow diagram of the study ana analysis inclusion process.'}
+```{r fig-strobe, fig.width = 7.086614166, fig.height = 5.511811018, fig.cap = 'CONSORT flow diagram of the study analysis inclusion process.'}
 
 paper_figures$strobe$plot
 
 ```
 
-__Figure \@ref(fig:fig-consort). CONSORT flow diagram of the study analysis inclusion process.__
+__Figure \@ref(fig:fig-strobe). CONSORT flow diagram of the study analysis inclusion process.__
 
-PH: pulmonary hypertension, PHC: right heart catheterization, CTEPH: chronic thromboembolic pulmonary hypertension.
-
-\newpage
-
-```{r fig-uni-cox, fig.width = mm_inch(paper_figures$uni_cox$w), fig.height = mm_inch(paper_figures$uni_cox$h), dpi = 600, fig.cap = 'Factors associated with overall survival identified by univariable Cox modeling.'}
-
-paper_figures$uni_cox$plot
-
-```
-
-__Figure \@ref(fig:fig-uni-cox). Factors associated with overall survival identified by univariable Cox modeling.__
-
-Correlations of `r nrow(pah_study$mod_variables)` candidate variables (__Supplementary Table S1__) with overall survival was investigated with a series of Cox proportional hazard models in the Innsbruck (IBK) and Linz/Vienna (LZ/W) PAH collective (__Supplementary Table S2__). Hazard ratio (HR) significance was assessed with Wald test and corrected for multiple comparisons with Benjamini-Hochberg method. HR with 95% confidence intervals for the factors correlating significantly with survival in at least one cohort are presented in the plot. The range of N number of the complete observations is shown under the plot.
+PH: pulmonary hypertension; RHC: right heart catheterization; CTEPH: chronic thromboembolic pulmonary hypertension.
 
 \newpage
 
-```{r fig-sign-os, fig.width = mm_inch(paper_figures$signatures_os$w), fig.height = mm_inch(paper_figures$signatures_os$h), dpi = 600, fig.cap = 'Prediction of overall PH survival by candidate multivariable risk signatures and established risk assessment tools.'}
+```{r fig-elanet, fig.width = 7.086614166, fig.height = 7.87401574, fig.cap = 'Multi-parameter survival modeling.'}
 
-paper_figures$signatures_os$plot
+paper_figures$elanet$plot
 
 ```
 
-__Figure \@ref(fig:fig-sign-os). Prediction of overall PAH survival by candidate multivariable risk signatures and established risk assessment tools.__
+__Figure \@ref(fig:fig-elanet). Multi-parameter survival modeling.__
 
-Correlation of the candidate 2 - 4 parameter risk signatures (all possible combinations of `r nrow(pah_study$mod_variables)` variables, __Supplementary Table S1__) with overall survival (OS) in the Innsbruck PAH training cohort (IBK) was investigated by Cox proportional hazard modeling and verified by 20-fold cross-validation. The association of the linear predictor scores for the significant risk signatures was subsequently tested in the Linz/Vienna (LZ/W) cohort by Cox proportional hazard modeling. The significance of model estimates was determined by Wald test, model relevance was assessed by the likelihood ratio test (LRT) and concordance index (C-index). P values were corrected for multiple comparisons with Benjamini-Hochberg method.
+The elastic net multi-parameter Cox regression model with the set of `r nrow(pah_study$mod_variables)` (__Supplementary Table S1__) independent variables and overall survival as a response was developed in the training Innsbruck cohort. Numeric independent variables were median centered and their first and second order terms included in the model. Numbers of complete observations and mortality is indicated in __B__.
 
-__(A)__ Scheme of selection of the developed significant risk signatures.
+__(A)__ Non-zero model coefficients represented as hazard ratios (HR). Plot points are labeled with the HR values.
 
-__(B)__ C-index values with 95% confidence intervals for Cox models of the `r length(multi_modeling$cv_pass$models)` newly developed significant signatures and the established PH risk assessment tools in the training and test cohorts.
+__(B)__ Association of the elastic net model linear predictor score with overall survival in the training IBK and test Linz/Vienna (LZ/W) cohort. Actual and modeled survival are presented in Kaplan-Meier plots. $R^2$ and concordance index (C) with 95$\%$ confidence intervals are shown in the plot captions.
+
+CI: cardiac index; NT-pro-BNP: N terminal pro brain natriuretic peptide; RDW: red blood cell distribution width; PVR: pulmonary vascular resistance; RAA: right atrial area; SMWD: six minute walking distance.
 
 \newpage
 
-```{r fig-sign-five, fig.width = mm_inch(paper_figures$signatures_five$w), fig.height = mm_inch(paper_figures$signatures_five$h), dpi = 600, fig.cap = 'Correlation of the newly developed risk signatures with 5-year mortality.'}
+```{r fig-part-clust, fig.width = 7.086614166, fig.height = 7.086614166, fig.cap = 'Clustering of the study participants.'}
 
-paper_figures$signatures_five$plot
+paper_figures$part_clust$plot
 
 ```
 
-__Figure \@ref(fig:fig-sign-five). Correlation of the newly developed risk signatures with 5-year mortality.__
+__Figure \@ref(fig:fig-part-clust). Clustering of the study participants.__
 
-The correlation of normalized linear predictor scores (__Supplementary Table S4__) of the `r length(multi_modeling$cv_pass$models)` developed risk signatures significantly associated with overall survival (__Figure \@ref(fig:fig-sign-os)__) with 5-year mortality in the Innsbruck training (IBK) and Linz/Vienna (LZ/W) validation PAH cohorts was investigated by logistic regression. Odds ratio (OR) significance was determined by Wald test and corrected for multiple comparisons with Benjamini-Hochberg method.
+Clustering of the training Innsbruck (IBK) cohort participants in respect to the survival-associated factors identified by elastic-net modeling (__Figure \@ref(fig:fig-elanet)__) was investigated by PAM (partition around medoids) algorithm and cosine distance measure. Numeric clustering features were median centered prior to the clustering. Cluster assignment in the training Linz/Vienna cohort (LZ/W) was done with the k-nearest neighbor classification technique. Numbers of individuals assigned to the clusters are presented in __B__.
 
-__(A)__ Scheme of signature testing.
+__(A)__ Cluster assignment overlaid on the 3-dimensional principal analysis (PCA) score plots. The first two principal components (PC) are presented, percentages of variance associated with the components are indicated in the plot axes.
 
-__(B)__ OR values with 95% confidence intervals for the `r length(multi_modeling$cv_pass$models)` tested signatures and the established PH risk assessment tools in the training and test cohorts.
+__(B)__ Differences in the clustering features between the participant clusters presented in violin plots. Points represent single observations.
+
+CI: cardiac index; NT-pro-BNP: N terminal pro brain natriuretic peptide; RDW: red blood cell distribution width; PVR: pulmonary vascular resistance; RAA: right atrial area; SMWD: six minute walking distance.
 
 \newpage
 
-```{r fig-gender-surv, fig.width = mm_inch(paper_figures$gender_surv$w), fig.height = mm_inch(paper_figures$gender_surv$h), dpi = 600, fig.cap = 'The interplay of gender and age affects PAH survival independently of functional classification, six-minute walking distance and NT-pro-BNP levels.'}
+```{r fig-cluster-risk, fig.width = 7.086614166, fig.height = 8.267716527, fig.cap = 'Risk assessment and survival differences in the participant clusters.'}
 
-paper_figures$gender_surv$plot
+paper_figures$cluster_risk$plot
 
 ```
 
-__Figure \@ref(fig:fig-gender-surv). The interplay of gender and age affects PAH survival independently of functional classification, six-minute walking distance and NT-pro-BNP levels.__
+__Figure \@ref(fig:fig-cluster-risk). Risk assessment and survival differences in the participant clusters.__
 
-__(A)__ Differences in PAH survival between the participants stratified by age class and sex (IBK: Innsbruck, LZ/W: Linz/Vienna cohort) were assessed by Kaplan-Meier analysis and Mentel-Henszel test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plots. The numbers of males and females in the age strata are indicated below the plots.
+Risk assessment scoring and overall survival was compared between the study participant clusters (__Figure \@ref(fig:fig-part-clust)__, __Supplementary Figure S3__) with Mann-Whitney and Mentel-Hensezl test, respectively. P values were adjusted for multiple testing with Benjamini-Hochberg method. Numbers of individuals assigned to the clusters are presented in __F__.
 
-__(B)__  Differences in WHO functional classification (WHO FC), six-minute walking distance (SMWD) and circulating NT-pro-BNP levels at PH diagnosis in the participants stratified by age class and sex were assessed by Kruskal-Wallis test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plot captions.
+__(A - E)__ Risk assessment score values presented in violin plots. Points represent single observations, diamonds with whiskers indicate medians with interquartile ranges. P values are presented in plot captions.
+
+__(F)__ Differences in overall survival in the participant clusters visualized in Kaplan-Meier plots. P values are indicated in the plots.
+
+FPHR: French pulmonary hypertension register; SPAHR: Swedish pulmonary arterial hypertension register; COMPERA: comparative, prospective registry of newly initiated therapies for pulmonary hypertension; mRASP: modified risk assessment score of PAH.
 
 \newpage
 
-```{r fig-gender-signatures, fig.width = mm_inch(paper_figures$gender_signatures$w), fig.height = mm_inch(paper_figures$gender_signatures$h), dpi = 600, fig.cap = 'Values of the best performing machine-learning risk signature score in gender and age strata.'}
+```{r fig-summary, fig.width = 7.086614166, fig.height = 3.93700787, fig.cap = 'Summary of the analysis results.'}
 
-paper_figures$gender_signatures$plot
+paper_figures$summary$plot
 
 ```
 
-__Figure \@ref(fig:fig-gender-signatures). Values of the best performing machine-learning risk signature score in gender and age strata.__
+__Figure \@ref(fig:fig-summary). Summary of the analysis results.__
 
-The risk signatures predicting overall survival in PH were developed as presented in __Figure 3__. The differences in the signature 2525 linear predictor scores (__Supplementary Table S4__) between the participants stratified by age class and sex (IBK: Innsbruck, LZ/W: Linz/Vienna cohort) were assessed by Kruskal-Wallis test. P values corrected for multiple comparisons with Benjamini-Hochberg method are shown in the plot captions. IBK $\leq$ 60: male n = `r gender$n_numbers$IBK_young$n[1]`, female n = `r gender$n_numbers$IBK_young$n[2]`, IBK >60: male n = `r gender$n_numbers$IBK_elderly$n[1]`, female n = `r gender$n_numbers$IBK_elderly$n[2]`, 
-LZ/W $\leq$ 60: male n = `r gender$n_numbers$LZ_young$n[1]`, female n = `r gender$n_numbers$LZ_young$n[2]`, LZ/W >60: male n = `r gender$n_numbers$LZ_elderly$n[1]`, female n = `r gender$n_numbers$LZ_elderly$n[2]`.
+RHC: right heart catheterization; CI: cardiac index; NT-pro-BNP: N terminal pro brain natriuretic peptide; RDW: red blood cell distribution width; PVR: pulmonary vascular resistance; RAA: right atrial area; SMWD: six minute walking distance.
+
+\newpage

@@ -15,7 +15,7 @@
     # identifies if the patient survived in the study period: 0 - survivor, 1 - deceased
     
     mort_tbl <- inp_tbl %>% 
-      ddply(.(ID), summarize, death_study = if(sum(dead_alive, na.rm = T) > 0) 1 else 0) %>% 
+      ddply(.(ID), summarise, death_study = if(sum(dead_alive, na.rm = TRUE) > 0) 1 else 0) %>% 
       as_tibble
     
     if(!update) {
@@ -122,321 +122,111 @@
   
 # variable translation -----
   
-  translate_vars <- function(variable_vector, show_units = F) {
+  translate_vars <- function(variable_vector, value = 'label', lexicon = pah_study$legend) {
     
     ## translates the variable vector into a vector of corresponding labels
     
-    if(class(variable_vector) == 'list') {
-      
-      return(variable_vector %>% 
-               map(globals$translate_vars, 
-                   show_units = show_units))
-      
-    }
+    transl_vec <- lexicon[[value]] %>% 
+      set_names(lexicon[['variable']])
     
-    lab_vec <- globals$var_labs[variable_vector] %>% 
-      unname
+    transl_vec <- transl_vec[variable_vector]
     
-    if(show_units) {
-      
-      return(lab_vec)
-      
-    } else {
-      
-      return(lab_vec %>% 
-               stri_replace(regex = ',.*', replacement = ''))
-      
-    }
+    transl_vec[is.na(transl_vec)] <- ''
+    
+    return(transl_vec)
     
   }
   
 # wrappers for Cox modeling and model validation -----
   
-  model_coxph_lst <- function(inp_tbl, surv_object, var_vector, safely = F) {
+  model_spline_cox <- function(data, event_variable, time_variable, indep_variable, sec_order = TRUE, ...) {
     
-    ## a wrapper for the model_coxph() function from modeling_tool.R to handle variable vectors
+    ## model formula
     
-    if(!safely) {
+    surv_chunk <- paste0('Surv(', time_variable, ', ', event_variable, ')')
+    
+    if(is.numeric(data[[indep_variable]])) {
       
-      cox_res <- var_vector %>% 
-        map(model_coxph, 
-            surv_object = surv_object, 
-            inp_table = inp_tbl) %>% 
-        set_names(var_vector)
+      if(sec_order) {
+        
+        indep_chunk <- paste0(indep_variable, ' + ', 'I(', indep_variable, '^2)')
+        
+      } else {
+        
+        indep_chunk <- indep_variable
+        
+      }
+      
+      num_index <- TRUE
       
     } else {
       
-      cox_res <- var_vector %>% 
-        map(safely(model_coxph), 
-            surv_object = surv_object, 
-            inp_table = inp_tbl) %>% 
-        set_names(var_vector)
+      indep_chunk <- indep_variable
+      
+      num_index <- FALSE
       
     }
     
-    return(cox_res)
-    
-  }
-  
-  get_cox_results_lst <- function(cox_model_list, 
-                                  exponentiate = T, 
-                                  r_stats = T, 
-                                  tibble_output = T, 
-                                  correct = 'BH') {
-    
-    ## a wrapper for the get_cox_results() function handling lists
-    
-    cox_summary <- cox_model_list %>% 
-      map(get_cox_results, 
-          exponentiate = exponentiate, 
-          r_stats = r_stats)
-    
-    if(!tibble_output) {
-      
-      return(cox_summary)
-      
-    } else {
-      
-      cox_summary <- suppressWarnings(map2_dfr(cox_summary, 
-                                               names(cox_summary),  
-                                               function(x, y) mutate(x, variable = y)) %>% 
-                                        as_tibble %>% 
-                                        mutate(level = stri_replace(parameter, fixed = variable, replacement = '')))
-      
-      
-      
-      
-      if(correct == 'none') {
-        
-        return(cox_summary)
-        
-      } else {
-        
-        cox_summary <- cox_summary %>% 
-          mutate(p_adjusted = p.adjust(p_value, method = correct), 
-                 significant = ifelse(p_adjusted < 0.05, 'yes', 'no'), 
-                 plot_label = paste(signif(estimate, 2), 
-                                    ' (', 
-                                    signif(lower_ci, 2), 
-                                    ', ', 
-                                    signif(upper_ci, 2), 
-                                    '), p = ', 
-                                    signif(p_adjusted, 2), 
-                                    sep = ''))
-        
-        return(cox_summary)
-        
-      }
-      
-    }
-    
-  }
-  
-  get_cox_stats <- function(cox_model) {
-    
-    mod_summary <- summary(cox_model)
-    
-    mod_stats <- tibble(n = cox_model$n, 
-                        n_event = cox_model$nevent, 
-                        p_lrt = mod_summary$logtest[['pvalue']], 
-                        p_wald = mod_summary$waldtest[['pvalue']], 
-                        c_index = cox_model$concordance[['concordance']], 
-                        lower_ci = cox_model$concordance[['concordance']] + cox_model$concordance[['std']] * qnorm(0.025), 
-                        upper_ci = cox_model$concordance[['concordance']] + cox_model$concordance[['std']] * qnorm(0.975), 
-                        rsq = mod_summary$rsq[[1]], 
-                        aic = AIC(cox_model), 
-                        mse = mean(cox_model$residuals^2), 
-                        mae = mean(abs(cox_model$residuals)))
-    
-    return(mod_stats)
-    
-  }
-  
-  extract_cox_info <- function(cox_model, .parallel = F) {
-    
-    ## extracts estimates and measures of model performance in the training data set
-    
-    if(class(cox_model) == 'list') {
-      
-      start_time <- Sys.time()
-      message(paste('Extracting stats for', length(cox_model), 'models'))
-      on.exit(message(paste('Elapsed:', Sys.time() - start_time)))
-      
-      if(.parallel) {
-        
-        plan('multisession')
-        
-        stat_results <- cox_model %>% 
-          future_map(extract_cox_info) %>% 
-          set_names(names(cox_model)) %>% 
-          transpose
-        
-        plan('sequential')
-        
-      } else {
-        
-        stat_results <- cox_model %>% 
-          map(extract_cox_info) %>% 
-          set_names(names(cox_model)) %>% 
-          transpose
-        
-      }
-      
-      stat_results$estimates <- stat_results$estimates %>% 
-        map2(., names(.), ~mutate(.x, model_id = .y))
-      
-      stat_results$stats <- stat_results$stats %>% 
-        map2(., names(.), ~mutate(.x, model_id = .y)) %>% 
-        do.call('rbind', .) %>% 
-        mutate(p_lrt_adj = p.adjust(p_lrt, 'BH'), 
-               p_wald_adj = p.adjust(p_wald, 'BH'))
-      
-      return(stat_results)
-      
-    }
-    
-    mod_est <- get_cox_results(cox_model = cox_model, 
-                               exponentiate = T)
-    
-    mod_stats <- get_cox_stats(cox_model = cox_model) %>% 
-      mutate(signif_estimates = ifelse(all(mod_est$p_value < 0.05), 'yes', 'no'))
-     
-    return(list(estimates = mod_est, 
-                stats = mod_stats))
-    
-  }
-  
-  get_c_fold <- function(cox_model, new_data = NULL, fold_obs = NULL) {
-    
-    ## gets prediction stats for the data fold
-    
-    if(is.null(fold_obs)) {
-      
-      return(get_cox_stats(cox_model))
-      
-    }
-    
-    ## modifying the survival objects and data sets
-    
-    train_surv <- cox_model$y[-fold_obs, ]
-    test_surv <- cox_model$y[fold_obs, ]
-    
-    if(is.null(new_data)) {
-      
-      new_data <- model.frame(cox_model)
-      
-    }
-    
-    train_data <- new_data[-fold_obs, ]
-    test_data <- new_data[fold_obs, ]
-    
-    ## re-fitting the input model to the training data
-    
-    train_formula <- paste('train_surv ~', paste(names(cox_model$xlevels), collapse = '+')) %>% 
+    mod_form <- paste(surv_chunk, indep_chunk, sep = '~') %>% 
       as.formula
     
-    train_model <- coxph(formula = train_formula, 
-                         data = train_data)
+    ## model
     
-    ## calculating the lp score for the test data set, fitting a cox model
+    cox_call <- call2('coxph', formula = mod_form, data = data)
     
-    test_formula <- 'test_surv ~ lp_score' %>% 
-      as.formula
+    cox_mod <- eval(cox_call)
     
-    test_data <- test_data %>% 
-      mutate(lp_score = predict(train_model, 
-                                newdata = test_data, 
-                                type = 'lp'))
+    ## model summary
     
-    test_model <- coxph(formula = test_formula, 
-                        data = test_data)
+    cox_summary <- get_cox_results(cox_mod, 
+                                   exponentiate = TRUE, 
+                                   r_stats = TRUE)
     
-    return(get_cox_stats(test_model))
+    c_obj <- concordance(cox_mod)
+    
+    cox_summary <- cox_summary %>% 
+      mutate(variable = indep_variable, 
+             level = if(!num_index) stri_replace(parameter, fixed = variable, replacement = '') else NA, 
+             order = if(num_index & sec_order) c(1, 2) else NA, 
+             aic = AIC(cox_mod), 
+             c_index = c_obj$concordance, 
+             c_lower_ci = c_index + sqrt(c_obj$var) * qnorm(0.025), 
+             c_upper_ci = c_index + sqrt(c_obj$var) * qnorm(0.975))
+    
+    cox_summary <- cox_summary[c('parameter', 
+                                 'variable', 
+                                 'level', 
+                                 'order', 
+                                 'estimate', 
+                                 'se', 
+                                 'z', 
+                                 'lower_ci', 
+                                 'upper_ci', 
+                                 'p_value', 
+                                 'n_complete', 
+                                 'rsq_mev', 
+                                 'aic', 
+                                 'c_index', 
+                                 'c_lower_ci', 
+                                 'c_upper_ci')]
+    
+    ## assumptions
+    
+    cox_assum <- cox.zph(cox_mod)
+    
+    ## output
+    
+    list(model = cox_mod, 
+         summary = as_tibble(cox_summary), 
+         assumptions = cox_assum)
     
   }
   
-  cv_cox <- function(cox_model, 
-                     new_data = NULL, 
-                     n_folds = 20, 
-                     seed = 1234, 
-                     detailed = T, 
-                     hide_errors = T) {
-    
-    if(class(cox_model) == 'list') {
-      
-      res_tbl <- cox_model %>% 
-        map(cv_cox, 
-            n_folds = n_folds, 
-            new_data = new_data, 
-            seed = seed, 
-            detailed = F, 
-            hide_errors = T) %>% 
-       map2_dfr(., names(.), ~mutate(.x, model_id = .y))
-      
-      return(res_tbl)
-      
-    }
-    
-    ## performs n-fold CV of a Cox model
-    
-    set.seed(seed = seed)
-    
-    folds <- createFolds(cox_model$y, k = n_folds) %>% 
-      map(as.numeric)
-    
-    fold_stats <- folds %>% 
-      map(safely(get_c_fold), 
-          cox_model = cox_model, 
-          new_data = new_data) %>% 
-      transpose
-    
-    fold_stats$result <- fold_stats$result %>% 
-      compact %>% 
-      map2_dfr(., names(.), ~mutate(.x, fold_id = .y))
-    
-    fold_stats$error <- compact(fold_stats$error)
-    
-    if(length(fold_stats$error) > 0) {
-      
-      warning(paste(length(fold_stats$error), 'modeling faults occured'))
-      
-    }
-    
-    if(detailed) {
-      
-      if(hide_errors) {
-        
-        return(fold_stats$result)
-        
-      } else {
-        
-        return(fold_stats)
-        
-      }
-     
-      
-    }
-    
-    cv_stats <- c('c_index', 
-                  'rsq', 
-                  'mse', 
-                  'mae') %>% 
-      map_dfr(~c(mean(fold_stats$result[[.x]], na.rm = T), 
-                 quantile(fold_stats$result[[.x]], c(0.025, 0.975), na.rm = T)) %>% 
-                set_names(c('mean', 'lower_ci', 'upper_ci'))) %>% 
-      mutate(stat =  c('c_index', 
-                       'rsq', 
-                       'mse', 
-                       'mae'))
-    
-    return(cv_stats)
-    
-  }
   
 # displaying the modeling results -----
   
   plot_summ_forest <- function(inp_tbl, 
-                               variable = 'var_lab', 
+                               variable = 'variable', 
                                level = 'level', 
                                estimate = 'estimate', 
                                lower_ci = 'lower_ci', 
@@ -449,7 +239,7 @@
                                plot_subtitle = NULL, 
                                plot_tag = NULL, 
                                x_lab = 'HR', 
-                               color_lab = 'Mortality\ncorrelation', 
+                               color_lab = 'Risk\ncorrelation', 
                                cutpoint = 1, 
                                signif_digits = 2, 
                                facet = T) {
@@ -464,9 +254,12 @@
     ## plot
     
     inp_tbl <- inp_tbl %>% 
-      mutate(axis_lab = ifelse(.data[[level]] %in% c('no', 'yes', ''), 
-                               .data[[variable]], 
-                               paste(.data[[variable]], .data[[level]], sep = ': ')), 
+      mutate(axis_lab = ifelse(.data[[level]] %in% c('no', 'yes', '') | is.na(.data[[level]]), 
+                               translate_vars(.data[[variable]]), 
+                               paste(translate_vars(.data[[variable]]), .data[[level]], sep = ': ')), 
+             axis_lab = ifelse(order == 1 | is.na(order), axis_lab, paste0(axis_lab, '\u00B2')), 
+             axis_lab = stri_replace(axis_lab, fixed = 'cm2', replacement = 'cm\u00B2'), 
+             axis_lab = stri_replace(axis_lab, fixed = '=', replacement = '\u2265'), 
              est_lab = paste0(signif(.data[[estimate]], signif_digits),
                               ' [', 
                               signif(.data[[lower_ci]], signif_digits), 
@@ -531,378 +324,103 @@
     return(forest_plot)
     
   }
+
+# clustering graphics -----
   
-  plot_model_stats <- function(inp_tbl, 
-                               x_var, 
-                               y_var, 
-                               highlight = NULL, 
-                               label_var = NULL, 
-                               lower_x = NULL, 
-                               upper_x = NULL, 
-                               lower_y = NULL, 
-                               upper_y = NULL, 
-                               fill_var = NULL, 
-                               default_fill = 'steelblue', 
-                               plot_title = NULL, 
-                               plot_subtitle = NULL, 
-                               plot_tag = NULL, 
-                               x_lab = x_var, 
-                               y_lab = y_var) {
-    
-    ## makes a custom point plot with the chosen model statistics
-    
-    if(!is.null(highlight) & !is.null(label_var)) {
-      
-      inp_tbl <- inp_tbl %>% 
-        mutate(plot_lab = ifelse(model_id %in% highlight, 
-                                 .data[[label_var]], 
-                                 NA))
-      
-    }
-    
-    ## plot
-    
-    if(is.null(fill_var)) {
-      
-      point_plot <- inp_tbl %>% 
-        ggplot(aes(x = .data[[x_var]], 
-                   y = .data[[y_var]]))
-      
-    } else {
-      
-      point_plot <- inp_tbl %>% 
-        ggplot(aes(x = .data[[x_var]], 
-                   y = .data[[y_var]], 
-                   fill = .data[[fill_var]], 
-                   color = .data[[fill_var]]))
-      
-    }
-    
-    if(!is.null(lower_x) & !is.null(lower_y) & !is.null(upper_x) & !is.null(upper_y)) {
-      
-      point_plot <- point_plot + 
-        geom_rect(aes(xmin = .data[[lower_x]], 
-                      xmax = .data[[upper_x]], 
-                      ymin = .data[[lower_y]], 
-                      ymax = .data[[upper_y]]), 
-                  alpha = 0.15)
-      
-    } 
-    
-    if(is.null(fill_var)) {
-      
-      point_plot <- point_plot + 
-        geom_point(size = 2, 
-                   shape = 21, 
-                   fill = default_fill, 
-                   color = 'black')
-      
-    } else {
-      
-      point_plot <- point_plot + 
-        geom_point(size = 2, 
-                   shape = 21, 
-                   color = 'black')
-      
-    }
-    
-    if(!is.null(highlight) & !is.null(label_var)) {
-      
-      point_plot <- point_plot + 
-        geom_text_repel(aes(label = .data[[label_var]]), 
-                        size = 2.5, 
-                        box.padding = 0.1)
-      
-    }
-    
-    point_plot <- point_plot + 
-      globals$common_theme + 
-      theme(panel.grid.major = element_line(color = 'gray90')) + 
-      labs(title = plot_title, 
-           subtitle = plot_subtitle, 
-           tag = plot_tag, 
-           x = x_lab, 
-           y = y_lab)
-    
-    return(point_plot)
-    
-  }
   
-  plot_c <- function(inp_tbl, 
-                     model_var = 'model_lab', 
-                     c_var = 'c_index', 
-                     lower_ci = 'lower_ci', 
-                     upper_ci = 'upper_ci', 
-                     cohort_var = 'dataset', 
-                     show_label = T, 
-                     plot_title = NULL, 
-                     plot_subtitle = NULL, 
-                     plot_tag = NULL, 
-                     x_lab = 'C-index', 
-                     color_lab = 'Cohort', 
-                     signif_digits = 2) {
+  plot_vio_panel <- function(clust_object, 
+                             plot_title = NULL, 
+                             plot_subtitle = NULL, 
+                             x_lab = 'Median-normalized value') {
     
-    ## presents C index values in a forest plot
+    ## plots a violin panel of the clustering features
     
-    inp_tbl <- inp_tbl %>% 
-      mutate(c_lab = paste0(signif(.data[[c_var]], signif_digits), 
-                            ' [', 
-                            signif(.data[[lower_ci]], signif_digits), 
-                            ' - ', 
-                            signif(.data[[upper_ci]], signif_digits), 
-                            ']'))
+    ## plotting table in the long format
     
+    plotting_tbl <- clust_object %>% 
+      extract('data')
     
-    forest_plot <- inp_tbl %>% 
-      ggplot(aes(x = .data[[c_var]], 
-                 y = reorder(.data[[model_var]], .data[[c_var]]), 
-                 color = .data[[cohort_var]], 
-                 shape = .data[[cohort_var]])) + 
-      geom_vline(xintercept = 0.5, 
-                 linetype = 'dashed') + 
-      geom_errorbarh(aes(xmin = lower_ci, 
-                         xmax = upper_ci), 
-                     height = 0) + 
-      geom_point(size = 2) + 
-      scale_color_manual(values = globals$center_colors, 
-                         labels = globals$center_labs, 
-                         name = color_lab) + 
-      scale_shape_manual(values = c(IBK_0 = 16, 
-                                    cv = 17, 
-                                    LZ_0 = 15)) + 
-      guides(shape = F) + 
+    plotting_ft <- names(plotting_tbl)
+    
+    plotting_tbl <- plotting_tbl %>% 
+      rownames_to_column('ID') %>% 
+      gather(key = 'feature', 
+             value = 'value', 
+             all_of(plotting_ft))
+    
+    plotting_tbl <- clust_object %>% 
+      extract('assignment') %>% 
+      set_names(c('ID', 'clust_id')) %>% 
+      left_join(plotting_tbl, ., by = 'ID') %>% 
+      mutate(feature = translate_vars(feature))
+    
+    ## n numbers, presented in the plot tag
+    
+    plot_tag <- ngroups(clust_object)
+    
+    plot_tag <- map2_chr(plot_tag[[1]], 
+                         plot_tag[[2]], 
+                         ~paste0(.x, ': n = ', .y)) %>% 
+      paste(collapse = ', ') %>% 
+      paste0('\n', .)
+    
+    ## violin plot panel
+    
+    plotting_tbl %>% 
+      ggplot(aes(x = value, 
+                 y = feature, 
+                 fill = clust_id)) + 
+      geom_violin(scale = 'width', 
+                  alpha = 0.25, 
+                  show.legend = FALSE) + 
+      geom_point(aes(color = clust_id), 
+                 size = 2, 
+                 shape = 16, 
+                 position = position_jitterdodge(jitter.width = 0.1, 
+                                                 dodge.width = 0.9), 
+                 alpha = 0.5) + 
+      scale_fill_manual(values = globals$cluster_colors, 
+                        name = 'Cluster') + 
+      scale_color_manual(values = globals$cluster_colors, 
+                         name = 'Cluster') +
       globals$common_theme + 
       theme(axis.title.y = element_blank(), 
-            panel.grid.major = element_line(color = 'gray90')) + 
+            strip.background = element_blank(), 
+            strip.text = element_blank()) + 
       labs(title = plot_title, 
-           subtitle = plot_subtitle,
+           subtitle = plot_subtitle, 
            tag = plot_tag, 
            x = x_lab)
     
-    if(show_label) {
-      
-      forest_plot <- forest_plot + 
-        geom_text(aes(label = c_lab), 
-                  size = 2.5, 
-                  hjust = 0.5, 
-                  vjust = -0.8)
-      
-    }
-    
-    return(forest_plot)
-    
   }
   
+# varia ------
   
-  get_score_formula <- function(cox_model, 
-                                signif_digits = 2, 
-                                level_dictionary = pah_study$level_dict) {
+  set_common_y <- function(plot_IBK, plot_LZ) {
     
-    ## extracts the score formula from a cox object
+    ## sets the common y numeric scale for two plots
+    ## with the clustering features
     
-    dic_vector <- set_names(level_dictionary$param_label, 
-                            level_dictionary$parameter)
-    
-    cox_model_terms <- dic_vector[names(cox_model$coefficients)]
-    cox_model_estimates <- signif(cox_model$coefficients, signif_digits)
-    
-    score_formula <- map2(cox_model_estimates, 
-                          cox_model_terms, 
-                          ~paste(.x, .y, sep = ' \u00D7 ')) %>%  
-      paste(collapse = ' + ')
-    
-    return(score_formula)
-    
-  }
-  
-  plot_score_forest <- function(cox_model, 
-                                signif_digits = 2, 
-                                level_dictionary = pah_study$level_dict, 
-                                x_trans = 'log2', 
-                                plot_title = NULL) {
-    
-    ## plots cox model estimates in a forest plot
-    
-    summ_tbl <- get_cox_results(cox_model = cox_model, 
-                                exponentiate = T) %>% 
-      mutate(est_lab = paste0(signif(estimate, signif_digits), 
-                              ' [', 
-                              signif(lower_ci, signif_digits), 
-                              ' - ', 
-                              signif(upper_ci, signif_digits), 
-                              ']'), 
-             significant = ifelse(p_value < 0.05, 'yes', 'no'),
-             corr_sign = ifelse(significant == 'yes', 
-                                ifelse(estimate > 1, 'positive', 'negative'), 
-                                'ns'))
-    
-    dic_vector <- set_names(level_dictionary$param_label, 
-                            level_dictionary$parameter)
-    
-    y_scale <- dic_vector[summ_tbl[['parameter']]]
-    
-    plot_tag <- paste0('\nTotal: n = ', 
-                       cox_model$n, 
-                       ', cases: n = ', 
-                       cox_model$nevent)
-    
-    model_stats <- get_cox_stats(cox_model)
-    
-    plot_subtitle <- paste0('MSE = ', 
-                           signif(model_stats$mse[1], 2), 
-                           ', C = ', 
-                           signif(model_stats$c_index[1], 2), 
-                           ' [', 
-                           signif(model_stats$lower_ci, 2), 
-                           ' - ', 
-                           signif(model_stats$upper_ci, 2), 
-                           '], pLRT = ', 
-                           signif(model_stats$p_lrt[1], 2))
-    
-    ## plotting
-    
-    forest_plot <- summ_tbl %>% 
-      ggplot(aes(x = estimate, 
-                 y = reorder(parameter, estimate), 
-                 color = corr_sign)) + 
-      geom_vline(xintercept = 1, 
-                 linetype = 'dashed') + 
-      geom_errorbarh(aes(xmin = lower_ci, 
-                         xmax = upper_ci), 
-                     height = 0) + 
-      geom_point(shape = 16, 
-                 size = 2) + 
-      geom_text(aes(label = est_lab), 
-                size = 2.5, 
-                hjust = 0.5, 
-                vjust = -0.8) + 
-      scale_x_continuous(trans = x_trans) + 
-      scale_y_discrete(labels = y_scale) + 
-      scale_color_manual(values = globals$pos_neg_scale) + 
-      guides(color = F) + 
-      globals$common_theme + 
-      theme(axis.title.y = element_blank(), 
-            panel.grid.major = element_line(color = 'gray90')) + 
-      labs(title = plot_title, 
-           subtitle = plot_subtitle, 
-           tag = plot_tag, 
-           x = 'HR')
-    
-    return(forest_plot)
-    
-  }
+    cmm_limits <- map(list(plot_IBK, plot_LZ), 
+                      ~.x$data$variable) %>% 
+      reduce(c) %>% 
+      range
 
-# ROC plotting and analysis wrappers -----
-  
-  plot_com_roc <- function(score_tbl, 
-                           stat_tbl, 
-                           signature, 
-                           status_var = 'death_acute', 
-                           plot_title = NULL, 
-                           plot_subtitle = NULL, 
-                           plot_tag = NULL, 
-                           show_auc = T) {
+    plot_IBK <- plot_IBK + 
+      labs(y = paste0('IBK, ', plot_IBK$labels$y))
     
-    ## plots the ROC for the given signature
+    plot_LZ <- plot_LZ + 
+      labs(y = paste0('LZ/W, ', plot_LZ$labels$y), 
+           title = '')
     
-    ## meta
-    
-    score_tbl <- score_tbl %>% 
-      select(.data[[status_var]], 
-             all_of(c(signature, 
-                      pah_study$comparators$variable))) %>% 
-      gather(key = 'model_id', 
-             value = 'score', 
-             all_of(c(signature, 
-                      pah_study$comparators$variable))) %>% 
-      mutate(model_id = factor(model_id, 
-                               c(signature, 
-                                 pah_study$comparators$variable)))
-    
-    stat_tbl <- stat_tbl %>% 
-      filter(model_id %in% c(signature, 
-                             pah_study$comparators$variable)) %>% 
-      mutate(model_lab = ifelse(model_id %in% pah_study$comparators$variable, 
-                                globals$comp_labs[model_id], 
-                                stri_replace(model_id, fixed = 'sign_', replacement = 'Sign ')), 
-             AUC_lab = paste0(signif(AUC, 2), 
-                              ' [', 
-                              signif(lowerCI, 2), 
-                              ' - ', 
-                              signif(upperCI, 2), 
-                              ']'))
-    
-    if(show_auc) {
-      
-      stat_tbl <- stat_tbl %>% 
-        mutate(model_lab = paste(model_lab, 
-                                 AUC_lab, sep = ', '))
-      
-    }
-    
-    model_labs <- set_names(stat_tbl$model_lab, 
-                            stat_tbl$model_id)
-    
-    model_colors <- c(globals$comp_colors, 
-                      set_names('black', signature))
-    
-    ## plot
-    
-    roc <- plot_roc(inp_table = score_tbl, 
-                    m_variable = 'score', 
-                    d_variable = status_var, 
-                    marker_variable = 'model_id', 
-                    labels = F, 
-                    pointsize = NA) + 
-      geom_abline(slope = 1, 
-                  intercept = 0, 
-                  linetype = 'dashed', 
-                  color = 'gray50') + 
-      scale_color_manual(values = model_colors, 
-                         labels = model_labs, 
-                         name = '') + 
-      theme(plot.title = element_text(size = 8, face = 'bold'), 
-            plot.subtitle = globals$common_text, 
-            plot.tag = globals$common_text) + 
-      labs(title = plot_title, 
-           subtitle = plot_subtitle, 
-           tag = plot_tag)
-    
-    return(roc)
+    list(plot_IBK, plot_LZ) %>% 
+      map(~.x + scale_y_continuous(limits = cmm_limits))
     
   }
   
-  
-  
-# Clustering accessories -----
-  
-  plot_radial <- function(clust_stats, 
-                          plot_title = NULL, 
-                          plot_subtitle = NULL, 
-                          plot_tag = NULL) {
+  mm_inch <- function(input_mm) {
     
-    ## makes a base radial plot for the selected clustering features
-    
-    radial_plot <- clust_stats %>% 
-      ggplot(aes(x = variable,
-                 y = mean * 100, 
-                 fill = variable)) +
-      geom_bar(stat = 'identity', 
-               color = 'black') + 
-      coord_polar(theta = 'x') + 
-      globals$common_theme + 
-      theme(panel.grid.major = element_line(color = 'gray80'), 
-            legend.position = 'bottom', 
-            axis.line = element_blank(), 
-            axis.text.x = element_blank(), 
-            axis.title.x = element_blank(), 
-            axis.text.y = element_text(size = 6)) + 
-      labs(title = plot_title, 
-           subtitle = plot_subtitle, 
-           tag = plot_tag, 
-           y = '% maximum')
-    
-    return(radial_plot)
+    return(0.0393700787 * input_mm)
     
   }
   

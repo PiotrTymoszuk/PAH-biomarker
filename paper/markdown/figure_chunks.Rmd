@@ -1,0 +1,48 @@
+```{r fig-strobe, fig.width = 7.086614166, fig.height = 5.511811018, fig.cap = 'CONSORT flow diagram of the study analysis inclusion process.'}
+
+paper_figures$strobe$plot
+
+```
+
+__Figure \@ref(fig:fig-strobe). CONSORT flow diagram of the study analysis inclusion process.__
+
+
+
+```{r fig-elanet, fig.width = 7.086614166, fig.height = 7.87401574, fig.cap = 'Multi-parameter survival modeling.'}
+
+paper_figures$elanet$plot
+
+```
+
+__Figure \@ref(fig:fig-elanet). Multi-parameter survival modeling.__
+
+
+
+```{r fig-part-clust, fig.width = 7.086614166, fig.height = 7.086614166, fig.cap = 'Clustering of the study participants.'}
+
+paper_figures$part_clust$plot
+
+```
+
+__Figure \@ref(fig:fig-part-clust). Clustering of the study participants.__
+
+
+
+```{r fig-cluster-risk, fig.width = 7.086614166, fig.height = 8.267716527, fig.cap = 'Risk assessment and survival differences in the participant clusters.'}
+
+paper_figures$cluster_risk$plot
+
+```
+
+__Figure \@ref(fig:fig-cluster-risk). Risk assessment and survival differences in the participant clusters.__
+
+
+
+```{r fig-summary, fig.width = 7.086614166, fig.height = 3.93700787, fig.cap = 'Summary of the analysis results.'}
+
+paper_figures$summary$plot
+
+```
+
+__Figure \@ref(fig:fig-summary). Summary of the analysis results.__
+
