@@ -8,9 +8,11 @@
   library(furrr)
   library(survminer)
   library(exda)
+  library(somKernels)
+  library(clustTools)
+  library(ggrepel)
   
   source_all(c('./tools/project_tools.R', 
-               './tools/clust_tools2.R', 
                './tools/modeling_tools.R'), 
              message = TRUE, crash = TRUE)
   

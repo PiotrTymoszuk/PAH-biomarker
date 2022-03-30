@@ -51,7 +51,7 @@
   
   ## Plots of PCA scores and loadings
   
-  pca$pca_score_plots <- list(red_analysis_object = pca$pca_obj,  
+  pca$pca_score_plots <- list(x = pca$pca_obj,  
                               point_color = globals$center_colors[c('IBK_0', 'LZ_0')]) %>% 
     pmap(plot, 
         type = 'scores', 
@@ -60,7 +60,7 @@
     map2(., globals$center_labs[c('IBK_0', 'LZ_0')], 
          ~.x + labs(title = .y))
   
-  pca$pca_loadings_plots <- list(red_analysis_object = pca$pca_obj,  
+  pca$pca_loadings_plots <- list(x = pca$pca_obj,  
                                  point_color = globals$center_colors[c('IBK_0', 'LZ_0')]) %>% 
     pmap(plot, 
          type = 'loadings', 
@@ -113,7 +113,6 @@
     map(get_clust_tendency, 
         n = 50, 
         seed = 1234)
-  
   
 # END ------
   

@@ -74,8 +74,8 @@
   
   insert_msg('Heat map of the clustering features')
   
-  clust$heat_maps <- list(sample_clust_object = clust[c('clust_obj_train', 
-                                                        'clust_obj_test')], 
+  clust$heat_maps <- list(x_object = clust[c('clust_obj_train', 
+                                             'clust_obj_test')], 
                           plot_title = c('Training: IBK', 'Test: LZ/W')) %>% 
     pmap(plot_clust_hm, 
          cust_theme = globals$common_theme, 
@@ -114,7 +114,8 @@
   
   insert_msg('Plots of variable impact')
   
-  clust$impact_plot <- clust$importance$summary %>% 
+  clust$impact_plot <- clust$importance %>% 
+    filter(variable != 'data') %>% 
     ggplot(aes(x = frac_diff, 
                y = reorder(variable, frac_diff))) + 
     geom_vline(xintercept = 0, 

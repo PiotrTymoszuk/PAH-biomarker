@@ -88,7 +88,7 @@
   clust_dev$cv_results <- clust_dev$objects %>% 
     map(cv, 
         nfolds = 10, 
-        nearest_n = 5, 
+        kNN = 5, 
         seed = 1234, 
         .parallel = TRUE) %>% 
     map_dfr(~.x$summary) %>% 
