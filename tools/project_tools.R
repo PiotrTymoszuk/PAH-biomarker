@@ -176,22 +176,28 @@
     
     cox_mod <- eval(cox_call)
     
-    ## model summary
+    cox_mod <- as_coxex(cox_mod, data = data)
     
-    cox_summary <- get_cox_results(cox_mod, 
-                                   exponentiate = TRUE, 
-                                   r_stats = TRUE)
+    ## inference summary
+
+    cox_summary <- summary(cox_mod, 
+                           type = 'inference', 
+                           trans_function = exp)
     
-    c_obj <- concordance(cox_mod)
+    ## fit stats
     
+    cox_stats <- summary(cox_mod, 
+                         type = 'fit')
+
     cox_summary <- cox_summary %>% 
       mutate(variable = indep_variable, 
              level = if(!num_index) stri_replace(parameter, fixed = variable, replacement = '') else NA, 
              order = if(num_index & sec_order) c(1, 2) else NA, 
-             aic = AIC(cox_mod), 
-             c_index = c_obj$concordance, 
-             c_lower_ci = c_index + sqrt(c_obj$var) * qnorm(0.025), 
-             c_upper_ci = c_index + sqrt(c_obj$var) * qnorm(0.975))
+             aic = cox_stats$aic, 
+             c_index = cox_stats$c_index, 
+             c_lower_ci = cox_stats$lower_ci, 
+             c_upper_ci = cox_stats$upper_ci, 
+             rsq_mev = cox_stats$raw_rsq)
     
     cox_summary <- cox_summary[c('parameter', 
                                  'variable', 
@@ -199,7 +205,7 @@
                                  'order', 
                                  'estimate', 
                                  'se', 
-                                 'z', 
+                                 'stat', 
                                  'lower_ci', 
                                  'upper_ci', 
                                  'p_value', 
@@ -212,7 +218,8 @@
     
     ## assumptions
     
-    cox_assum <- cox.zph(cox_mod)
+    cox_assum <- summary(cox_mod, 
+                         type = 'assumptions')
     
     ## output
     

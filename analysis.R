@@ -7,13 +7,13 @@
   library(caret)
   library(furrr)
   library(survminer)
+  library(coxExtensions)
   library(exda)
   library(somKernels)
   library(clustTools)
   library(ggrepel)
   
-  source_all(c('./tools/project_tools.R', 
-               './tools/modeling_tools.R'), 
+  source_all(c('./tools/project_tools.R'), 
              message = TRUE, crash = TRUE)
   
   insert_head()

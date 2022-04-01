@@ -36,7 +36,7 @@
   multi_plots[c('train_fits', 'test_fits')] <- map2(multi_cox[c('score_IBK_0', 'score_LZ_0')], 
                                                     multi_cox[c('coxph_IBK_0', 'coxph_LZ_0')], 
                                                     ~list(outcome = survfit(Surv(surv_months, death_study) ~ 1, data = .x), 
-                                                          predicted = survfit(.y$model, data = .x)))
+                                                          predicted = survfit(as_coxph(.y$model), data = .x)))
 
   ## survfits and difference in survival for the score tertiles
   
