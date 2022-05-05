@@ -129,7 +129,11 @@
   
   cl_chara$result_tbl <- cl_chara$result_tbl %>% 
     map(~map_dfc(.x, stri_replace, regex = '\\nComplete:\\s{1}.*', replacement = '') %>% 
-          map_dfc(stri_replace, regex = '^no.*\\nyes:\\s{1}', replacement = ''))
+          map_dfc(stri_replace, regex = '^no.*\\nyes:\\s{1}', replacement = '') %>% 
+          map_dfc(stri_replace, regex = 'Mean.*\\n', replacement = '') %>% 
+          map_dfc(stri_replace_all, fixed = '% (', replacement = '% (n = ') %>% 
+          map_dfc(stri_replace, fixed = 'Median =', replacement = 'median:') %>% 
+          map_dfc(stri_replace, fixed = 'Range', replacement = 'range'))
   
 # Single plots of the numeric variables ------
   

@@ -47,9 +47,26 @@
               w = 180, 
               h = 200)
   
-# Figure 3: clustering of the participants -----
+# Figure 3: model calibration ------   
   
-  insert_msg('Figure 3: participant clustering')
+  insert_msg('Figure 3: Calibration of the elastic net model')
+  
+  paper_figures$elanet_calibration <- multi_plots$km_quart_plots %>% 
+    map(~.x + theme(legend.position = 'none')) %>% 
+    plot_grid(plotlist = ., 
+              ncol = 2, 
+              align = 'hv') %>% 
+    plot_grid(get_legend(multi_plots$km_quart_plots[[1]] + 
+                           theme(legend.position = 'bottom')), 
+              nrow = 2, 
+              rel_heights = c(0.9, 0.1)) %>% 
+    as_figure(label = 'figure_3_elanet_tertiles', 
+              w = 180,
+              h = 90)
+  
+# Figure 4: clustering of the participants -----
+  
+  insert_msg('Figure 4: participant clustering')
 
   paper_figures$part_clust$top_panel <- clust$pca_plots %>% 
     map(~.x + 
@@ -81,13 +98,13 @@
                                         rel_heights = c(0.35, 0.65), 
                                         labels = LETTERS, 
                                         label_size = 10) %>% 
-    as_figure(label = 'figure_3_cluster_development', 
+    as_figure(label = 'figure_4_cluster_development', 
               w = 180, 
               h = 180)
     
-# Figure 4: differences in risk between the clusters -----
+# Figure 5: differences in risk between the clusters -----
   
-  insert_msg('Figure 4: differences in the the risk scales and survival between the clusters')
+  insert_msg('Figure 5: differences in the the risk scales and survival between the clusters')
   
   paper_figures$cluster_risk$top_panel <- map2(cl_chara$plots[c('IBK_0.FRENCH3p', 
                                                                 'IBK_0.FRENCH4p', 
@@ -130,11 +147,11 @@
                                           rel_heights = c(0.6, 0.4), 
                                           labels = c('', 'F'), 
                                           label_size = 10) %>% 
-    as_figure(label = 'figure_4_cluster_risk', 
+    as_figure(label = 'figure_5_cluster_risk', 
               w = 180, 
               h = 210)
   
-# Figure 5: analysis resutl summary -----
+# Figure 6: analysis result summary -----
   
   insert_msg('Analysis result summary')
   
@@ -142,7 +159,7 @@
     draw_image('./aux files/summary_figure.png')
   
   paper_figures$summary <- paper_figures$summary %>% 
-    as_figure(label = 'figure_5_summary', 
+    as_figure(label = 'figure_6_summary', 
               w = 180, 
               h = 100)
   
@@ -157,25 +174,8 @@
     as_figure(label = 'figure_s1_uni_cox', 
               w = 180, 
               h = 210)
-  
-# Figure S2: calibration of the elastic net model ----
-  
-  insert_msg('Calibration of the elastic net model')
-  
-  suppl_figures$elanet_calibration <- multi_plots$km_quart_plots %>% 
-    map(~.x + theme(legend.position = 'none')) %>% 
-    plot_grid(plotlist = ., 
-              ncol = 2, 
-              align = 'hv') %>% 
-    plot_grid(get_legend(multi_plots$km_quart_plots[[1]] + 
-                           theme(legend.position = 'bottom')), 
-              nrow = 2, 
-              rel_heights = c(0.9, 0.1)) %>% 
-    as_figure(label = 'figure_s2_elanet_tertiles', 
-              w = 180,
-              h = 100)
-  
-# Figure S3: Cluster QC -----
+
+# Figure S2: Cluster QC -----
   
   insert_msg('QC of the clustering object')
   
@@ -200,11 +200,11 @@
                                         suppl_figures$cluster_qc$bottom_panel, 
                                         nrow = 2, 
                                         rel_heights = c(0.55, 0.45)) %>% 
-    as_figure(label = 'figure_s3_cluster_qc', 
+    as_figure(label = 'figure_s2_cluster_qc', 
               w = 180, 
               h = 190)
   
-# Figure S4: Study features, differences in the clusters ------
+# Figure S3: Study features, differences in the clusters ------
   
   insert_msg('Differences in the study features between the clusters')
   
@@ -219,7 +219,7 @@
                            theme(legend.position = 'bottom')), 
               nrow = 2, 
               rel_heights = c(0.9, 0.1)) %>%
-    as_figure(label = 'figure_s4_cluster_differences', 
+    as_figure(label = 'figure_s3_cluster_differences', 
               w = 180, 
               h = 120)
   
@@ -231,6 +231,12 @@
     walk(save_figure, 
          path = './paper/figures', 
          device = cairo_pdf)
+  
+  paper_figures %>% 
+    walk(save_figure, 
+         format = 'png', 
+         path = './paper/figures', 
+         dpi = 600)
   
   suppl_figures %>% 
     walk(save_figure, 

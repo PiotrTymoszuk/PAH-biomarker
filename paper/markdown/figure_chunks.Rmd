@@ -18,6 +18,16 @@ __Figure \@ref(fig:fig-elanet). Multi-parameter survival modeling.__
 
 
 
+```{r fig-elanet-calibration, fig.width = 7.086614166, fig.height = 3.543307083, fig.cap = 'Elastic net model linear prediction score and overall survival.'}
+
+paper_figures$elanet_calibration$plot
+
+```
+
+__Figure \@ref(fig:fig-elanet-calibration). Elastic net model linear prediction score and overall survival.__
+
+
+
 ```{r fig-part-clust, fig.width = 7.086614166, fig.height = 7.086614166, fig.cap = 'Clustering of the study participants.'}
 
 paper_figures$part_clust$plot

@@ -12,7 +12,23 @@
   insert_msg('Table 1: cohort characteristic')
   
   paper_tables$cohort_features <- data_ex$result_table %>% 
-    mutate(variable = translate_vars(variable, value = 'plot_lab', lexicon = data_ex$var_tbl), 
+    filter(variable %in% c('n_number', 
+                           'age_fc', 'sex', 
+                           'anemia', 'renal_ins', 'percardial_effusion', 
+                           'WHOFc_class', 'SMWD', 
+                           'mPAP', 'PVR', 
+                           'event5', 'surv_months')) %>% 
+    mutate(variable = factor(variable, 
+                             c('n_number', 
+                               'age_fc', 'sex', 
+                               'anemia', 'renal_ins', 'percardial_effusion', 
+                               'WHOFc_class', 'SMWD', 
+                               'mPAP', 'PVR', 
+                               'event5', 'surv_months'))) %>% 
+    arrange(variable) %>% 
+    mutate(variable = translate_vars(as.character(variable), 
+                                     value = 'plot_lab', 
+                                     lexicon = data_ex$var_tbl), 
            variable = ifelse(variable == '', 'N participants', variable)) %>% 
     set_names(c('Variable', 'IBK', 'LZ/W', 'Significance', 'Effect size'))
   
@@ -29,11 +45,38 @@
     left_join(suppl_tables$study_vars , ., by = 'variable') %>% 
     select(variable, description, label, unit, level, variable_type) %>% 
     mutate(variable_type = ifelse(variable_type == 'independent', 'yes', 'no')) %>% 
-    set_names(c('Variable', 'Description', 'Label', 'Unit', 'Stratification', 'Used in risk modeling'))
+    set_names(c('Variable', 'Description', 
+                'Label', 'Unit', 
+                'Stratification', 'Used in risk modeling'))
 
-# Supplementary Table S2: results of univariable Cox modeling -----
+# Supplementary Table S2: supplementary cohort characteristic -----
   
-  insert_msg('Table S1: univariable Cox results')
+  insert_msg('Table S2: supplementary')
+
+  suppl_tables$cohort_features <- data_ex$result_table %>% 
+    filter(variable %in% c('n_number', 'mRAP', 'SO2_RL_class', 
+                           'NTproBNP_log', 'cardiac_index', 'RA_area', 
+                           'MCV', 'RDW_log', 'FT_log', 'TSAT_log', 
+                           'mRASP', 'Compera', 'SPAHR', 
+                           'FRENCH3p', 'FRENCH4p', 
+                           'event3', 'death_study_fct')) %>% 
+    mutate(variable = factor(variable, 
+                             c('n_number', 'mRAP', 'SO2_RL_class', 
+                               'NTproBNP_log', 'cardiac_index', 'RA_area', 
+                               'MCV', 'RDW_log', 'FT_log', 'TSAT_log', 
+                               'mRASP', 'Compera', 'SPAHR', 
+                               'FRENCH3p', 'FRENCH4p', 
+                               'event3', 'death_study_fct'))) %>% 
+    arrange(variable) %>% 
+    mutate(variable = translate_vars(as.character(variable), 
+                                     value = 'plot_lab', 
+                                     lexicon = data_ex$var_tbl), 
+           variable = ifelse(variable == '', 'N participants', variable)) %>% 
+    set_names(c('Variable', 'IBK', 'LZ/W', 'Significance', 'Effect size'))
+  
+# Supplementary Table S3: results of univariable Cox modeling -----
+  
+  insert_msg('Table S3: univariable Cox results')
   
   suppl_tables$univariable_cox <- uni_cox$summary %>% 
     map_dfr(mutate, 
@@ -52,11 +95,13 @@
     select(cohort, variable, level, order, estimate, significance, c_index, rsq_mev) %>% 
     set_names(c('Cohort', 'Variable', 'Level', 'Model order', 'HR', 'Significance', 'C index', 'R\u00B2'))
 
-# Table S2 and S3: characteristic of the participant clusters -----
+# Table S4 and S5: characteristic of the participant clusters -----
   
-  insert_msg('Tables S2 and S3: characteristic of the participant clusters')
+  insert_msg('Tables S4 and S5: characteristic of the participant clusters')
   
   suppl_tables[c('clust_IBK', 'clust_LZ')] <- cl_chara$result_tbl %>% 
+    map(filter, 
+        variable != 'PCWP') %>% 
     map(mutate, 
         variable = translate_vars(variable, value = 'plot_lab', lexicon = data_ex$var_tbl), 
            variable = ifelse(variable == '', 'N participants', variable), 

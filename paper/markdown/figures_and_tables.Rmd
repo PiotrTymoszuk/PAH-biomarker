@@ -1,14 +1,16 @@
 ---
-title: "Comprehensive multivariate risk modeling improves mortality risk prediction in pulmonary arterial hypertension"
+title: "Risk stratification and phenotyping in pulmonary arterial hypertension with machine learning algorithms and cluster analysis – a long-term retrospective multicenter trial"
 subtitle: "Figures and Tables"
 author: "Innsbruck PAH registry"
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
 
 output: 
-  pdf_document:
-    latex_engine: xelatex
+  bookdown::word_document2:   
+    reference_docx: ms_template.docx
+    
 bibliography: pah_biblio.bib
-csl: frontiers-in-immunology.csl
+csl: sci_reports.csl
+
 header-includes:
   \usepackage{longtable}
   \usepackage{tabu}
@@ -49,10 +51,11 @@ paper_tables$cohort_features %>%
   width(2:3, width = 4.6, unit = 'cm') %>% 
   width(4, width = 2.5, unit = 'cm') %>% 
   width(5, width = 2, unit = 'cm') %>% 
-  footnote(c(2:4, 6:7, 9, 11:14, 16:18, 20, 23:27), 4, part = 'body', value = as_paragraph('Mann-Whitney U test.', ref_symbols = '1')) %>% 
-  footnote(c(2:4, 6:7, 9, 11:14, 16:18, 20, 23:27), 5, part = 'body', value = as_paragraph('Wilcoxon r effect size statistic.', ref_symbols = '2')) %>% 
-  footnote(c(5, 8, 10, 15, 19, 21:22), 4, part = 'body', value = as_paragraph('\u03C7\u00B2 test.'), ref_symbols = '3') %>% 
-  footnote(c(5, 8, 10, 15, 19, 21:22), 5, part = 'body', value = as_paragraph('Cramer V effect size statistic.'), ref_symbols = '4') %>% 
+  footnote(c(2, 8:10), 4, part = 'body', value = as_paragraph('Mann-Whitney U test.', ref_symbols = '1')) %>% 
+  footnote(c(2, 8:10), 5, part = 'body', value = as_paragraph('Wilcoxon r effect size statistic.'), ref_symbols = '2') %>% 
+  footnote(c(3:7, 11), 4, part = 'body', value = as_paragraph('\u03C7\u00B2 test.'), ref_symbols = '3') %>% 
+  footnote(c(3:7, 11), 5, part = 'body', value = as_paragraph('Cramer V effect size statistic.'), ref_symbols = '4') %>% 
+  footnote(12, 4, part = 'body', value = as_paragraph('Mentel-Haenszel test'), ref_symbols = '5') %>% 
   font(part = 'all', fontname = 'Cambria') %>% 
   fontsize(size = 10, part = 'all') %>% 
   theme_vanilla
@@ -63,7 +66,7 @@ paper_tables$cohort_features %>%
 
 # Figures {#sec:figures}
 
-```{r fig-strobe, fig.width = 7.086614166, fig.height = 5.511811018, fig.cap = 'CONSORT flow diagram of the study analysis inclusion process.'}
+```{r fig-strobe, fig.width = mm_inch(paper_figures$strobe$w), fig.height = mm_inch(paper_figures$strobe$h), fig.cap = 'CONSORT flow diagram of the study analysis inclusion process.'}
 
 paper_figures$strobe$plot
 
@@ -75,7 +78,7 @@ PH: pulmonary hypertension; RHC: right heart catheterization; CTEPH: chronic thr
 
 \newpage
 
-```{r fig-elanet, fig.width = 7.086614166, fig.height = 7.87401574, fig.cap = 'Multi-parameter survival modeling.'}
+```{r fig-elanet, fig.width = mm_inch(paper_figures$elanet$w), fig.height = mm_inch(paper_figures$elanet$h), fig.cap = 'Multi-parameter survival modeling.'}
 
 paper_figures$elanet$plot
 
@@ -93,7 +96,19 @@ CI: cardiac index; NT-pro-BNP: N terminal pro brain natriuretic peptide; RDW: re
 
 \newpage
 
-```{r fig-part-clust, fig.width = 7.086614166, fig.height = 7.086614166, fig.cap = 'Clustering of the study participants.'}
+```{r fig-elanet-calibration, fig.width = mm_inch(paper_figures$elanet_calibration$w), fig.height = mm_inch(paper_figures$elanet_calibration$h), fig.cap = 'Elastic net model linear prediction score and overall survival.'}
+
+paper_figures$elanet_calibration$plot
+
+```
+
+__Figure \@ref(fig:fig-elanet-calibration). Elastic net model linear prediction score and overall survival.__
+
+The elastic net multi-parameter Cox model was developed in the training Innsbruck (IBK) cohort (__Figure \@ref(fig:fig-elanet)__). Association of overall survival with the elastic net model linear prediction score in the training IBK and test Linz/Vienna (LZ/W) cohort was assessed by Kaplan-Meier analysis. Significance of the survival differences in the study participants stratified by the linear predictor score tertiles (T1: 0 - 33, T2: 34 - 66, T3: 66 - 100 percentile) was determined by log-rank test adjusted for multiple testing with Benjamini-Hochberg method. P values are shown in the plots, numbers of complete observations and mortality are indicated under the plots.
+
+\newpage
+
+```{r fig-part-clust, fig.width = mm_inch(paper_figures$part_clust$w), fig.height = mm_inch(paper_figures$part_clust$h), fig.cap = 'Clustering of the study participants.'}
 
 paper_figures$part_clust$plot
 
@@ -111,7 +126,7 @@ CI: cardiac index; NT-pro-BNP: N terminal pro brain natriuretic peptide; RDW: re
 
 \newpage
 
-```{r fig-cluster-risk, fig.width = 7.086614166, fig.height = 8.267716527, fig.cap = 'Risk assessment and survival differences in the participant clusters.'}
+```{r fig-cluster-risk, fig.width = mm_inch(paper_figures$cluster_risk$w), fig.height = mm_inch(paper_figures$cluster_risk$h), fig.cap = 'Risk assessment and survival differences in the participant clusters.'}
 
 paper_figures$cluster_risk$plot
 
@@ -119,7 +134,7 @@ paper_figures$cluster_risk$plot
 
 __Figure \@ref(fig:fig-cluster-risk). Risk assessment and survival differences in the participant clusters.__
 
-Risk assessment scoring and overall survival was compared between the study participant clusters (__Figure \@ref(fig:fig-part-clust)__, __Supplementary Figure S3__) with Mann-Whitney and Mentel-Hensezl test, respectively. P values were adjusted for multiple testing with Benjamini-Hochberg method. Numbers of individuals assigned to the clusters are presented in __F__.
+Risk assessment scoring and overall survival was compared between the study participant clusters (__Figure \@ref(fig:fig-part-clust)__, __Supplementary Figure S3__) with Mann-Whitney and Mentel-Haenszel test, respectively. P values were adjusted for multiple testing with Benjamini-Hochberg method. Numbers of individuals assigned to the clusters are presented in __F__.
 
 __(A - E)__ Risk assessment score values presented in violin plots. Points represent single observations, diamonds with whiskers indicate medians with interquartile ranges. P values are presented in plot captions.
 
@@ -129,7 +144,7 @@ FPHR: French pulmonary hypertension register; SPAHR: Swedish pulmonary arterial 
 
 \newpage
 
-```{r fig-summary, fig.width = 7.086614166, fig.height = 3.93700787, fig.cap = 'Summary of the analysis results.'}
+```{r fig-summary, fig.width = mm_inch(paper_figures$summary$w), fig.height = mm_inch(paper_figures$summary$h), fig.cap = 'Summary of the analysis results.'}
 
 paper_figures$summary$plot
 

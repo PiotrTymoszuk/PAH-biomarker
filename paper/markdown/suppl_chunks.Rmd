@@ -8,16 +8,6 @@ __Figure \@ref(fig:fig-uni-cox). Univariable Cox proportional hazard modeling.__
 
 
 
-```{r fig-elanet-calibration, fig.width = 7.086614166, fig.height = 3.93700787, fig.cap = 'Elastic net model linear prediction score and overall survival.'}
-
-suppl_figures$elanet_calibration$plot
-
-```
-
-__Figure \@ref(fig:fig-elanet-calibration). Elastic net model linear prediction score and overall survival.__
-
-
-
 ```{r fig-cluster-qc, fig.width = 7.086614166, fig.height = 7.480314953, fig.cap = 'Development of participant clusters.'}
 
 suppl_figures$cluster_qc$plot

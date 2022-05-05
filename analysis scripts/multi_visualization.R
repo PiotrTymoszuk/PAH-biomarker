@@ -142,7 +142,7 @@
          pval.size = 2.75) %>% 
     map(~.x$plot) %>% 
     map(~.x + globals$common_theme) %>% 
-    map(~.x + labs(subtitle = 'Linear predictor score quartiles', 
+    map(~.x + labs(subtitle = 'Linear predictor score tertiles', 
                    x = 'Overall survival, months')) %>% 
     map2(., multi_plots$n_tags, 
          ~.x + labs(tag = .y))

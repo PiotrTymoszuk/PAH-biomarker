@@ -93,17 +93,7 @@
                                             ci = FALSE, 
                                             pub_styled = TRUE, 
                                             adj_method = 'BH')
-  
-# Common result table -----
-  
-  insert_msg('Common result table')
-  
-  data_ex$result_table <- left_join(data_ex$desc_stats, 
-                                    data_ex$test_results[c('variable', 'significance', 'eff_size')], 
-                                    by = 'variable') %>% 
-    map_dfc(stri_replace, regex = 'no:.*\\nyes:\\s{1}', replacement = '') %>% 
-    map_dfc(stri_replace, regex = '\\nComplete:.*$', replacement = '')
-  
+
 # Violin plots of the numeric variables -----
   
   insert_msg('Violin plots with the numeric features')
@@ -142,7 +132,10 @@
   
   data_ex$surv_summary <- tibble(chisq = data_ex$surv_diffs$chisq, 
                                  df = length(data_ex$surv_diffs$n) - 1) %>% 
-    mutate(p_value = 1 - pchisq(chisq, df))
+    mutate(p_value = 1 - pchisq(chisq, df), 
+           significance = ifelse(p_value < 0.05, 
+                                 paste('p =', signif(p_value, 2)), 
+                                 paste0('ns (p = ', signif(p_value,2), ')')))
   
   ## n numbers
   
@@ -168,6 +161,28 @@
                                   pval.size = 2.75)$plot + 
     globals$common_theme + 
     labs(tag = data_ex$n_tag)
+  
+  
+# Common result table -----
+  
+  insert_msg('Common result table')
+  
+  data_ex$result_table <- left_join(data_ex$desc_stats, 
+                                    data_ex$test_results[c('variable', 'significance', 'eff_size')], 
+                                    by = 'variable') %>% 
+    map_dfc(stri_replace, regex = 'no:.*\\nyes:\\s{1}', replacement = '') %>% 
+    map_dfc(stri_replace, regex = '\\nComplete:.*$', replacement = '') %>% 
+    map_dfc(stri_replace, regex = 'Mean.*\\n', replacement = '') %>% 
+    map_dfc(stri_replace_all, fixed = '% (', replacement = '% (n = ') %>% 
+    map_dfc(stri_replace, fixed = 'Median =', replacement = 'median:') %>% 
+    map_dfc(stri_replace, fixed = 'Range', replacement = 'range')
+  
+  ## appending with the survival testign results (Mentel-Henszel test)
+
+  data_ex$result_table[data_ex$result_table$variable == 'surv_months', 'significance'] <- 
+    data_ex$surv_summary[['significance']][1]
+  
+  data_ex$result_table[data_ex$result_table$variable == 'surv_months', 'eff_size'] <- NA
   
 # END ----
   

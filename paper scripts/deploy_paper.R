@@ -8,6 +8,7 @@
 
   insert_figure(paper_figures$strobe, 
                 paper_figures$elanet, 
+                paper_figures$elanet_calibration, 
                 paper_figures$part_clust, 
                 paper_figures$cluster_risk, 
                 paper_figures$summary, 
@@ -15,6 +16,7 @@
                 ref_names = stri_replace(names(paper_figures), fixed = '_', replacement = '-'), 
                 captions = c('CONSORT flow diagram of the study analysis inclusion process.', 
                              'Multi-parameter survival modeling.', 
+                             'Elastic net model linear prediction score and overall survival.', 
                              'Clustering of the study participants.', 
                              'Risk assessment and survival differences in the participant clusters.', 
                              'Summary of the analysis results.'), 
@@ -26,13 +28,11 @@
   insert_msg('Supplementary Figure chunks')
   
   insert_figure(suppl_figures$uni_cox, 
-                suppl_figures$elanet_calibration, 
                 suppl_figures$cluster_qc, 
                 suppl_figures$clust_diff, 
                 file = './paper/markdown/suppl_chunks.Rmd', 
                 ref_names = stri_replace_all(names(suppl_figures), fixed = '_', replacement = '-'), 
                 captions = c('Univariable Cox proportional hazard modeling.', 
-                             'Elastic net model linear prediction score and overall survival.', 
                              'Development of participant clusters.', 
                              'Differences in study variable between the participant clusters.'), 
                 add_extern_legend = TRUE, 
