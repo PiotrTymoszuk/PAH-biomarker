@@ -14,8 +14,10 @@
   paper_figures$strobe <- plot_grid(ggdraw() + 
                                       draw_image('./aux files/strobe.png')) %>% 
     as_figure(label = 'figure_1_strobe', 
-                     w = 180, 
-                     h = 140)
+              ref_name = 'strobe', 
+              caption = 'Flow diagram of the study analysis inclusion process.', 
+              w = 180, 
+              h = 140)
   
 # Figure 2: development of the elastic net model -----
   
@@ -44,6 +46,8 @@
                                     label_size = 10, 
                                     rel_heights = c(0.54, 0.46)) %>% 
     as_figure(label = 'figure_2_elanet', 
+              ref_name = 'elanet',
+              caption = 'Multi-parameter survival modeling.', 
               w = 180, 
               h = 200)
   
@@ -61,6 +65,8 @@
               nrow = 2, 
               rel_heights = c(0.9, 0.1)) %>% 
     as_figure(label = 'figure_3_elanet_tertiles', 
+              ref_name = 'elanet_calibration', 
+              caption = 'Elastic net model linear prediction score and overall survival.', 
               w = 180,
               h = 90)
   
@@ -99,6 +105,8 @@
                                         labels = LETTERS, 
                                         label_size = 10) %>% 
     as_figure(label = 'figure_4_cluster_development', 
+              ref_name = 'part_clust', 
+              caption = 'Clustering of the study participants.', 
               w = 180, 
               h = 180)
     
@@ -148,6 +156,8 @@
                                           labels = c('', 'F'), 
                                           label_size = 10) %>% 
     as_figure(label = 'figure_5_cluster_risk', 
+              ref_name = 'cluster_risk', 
+              caption = 'Risk assessment and survival differences in the participant clusters.', 
               w = 180, 
               h = 210)
   
@@ -160,6 +170,8 @@
   
   paper_figures$summary <- paper_figures$summary %>% 
     as_figure(label = 'figure_6_summary', 
+              ref_name = 'summary', 
+              cpation = 'Summary of the analysis results.', 
               w = 180, 
               h = 100)
   
@@ -172,6 +184,8 @@
   
   suppl_figures$uni_cox <- suppl_figures$uni_cox %>% 
     as_figure(label = 'figure_s1_uni_cox', 
+              ref_name = 'uni_cox', 
+              caption = 'Univariable Cox proportional hazard modeling.', 
               w = 180, 
               h = 210)
 
@@ -201,6 +215,8 @@
                                         nrow = 2, 
                                         rel_heights = c(0.55, 0.45)) %>% 
     as_figure(label = 'figure_s2_cluster_qc', 
+              ref_name = 'cluster_qc', 
+              caption = 'Development of participant clusters.', 
               w = 180, 
               h = 190)
   
@@ -220,6 +236,8 @@
               nrow = 2, 
               rel_heights = c(0.9, 0.1)) %>%
     as_figure(label = 'figure_s3_cluster_differences', 
+              ref_name = 'clust_diff', 
+              caption = 'Differences in study variabled between the participant clusters.', 
               w = 180, 
               h = 120)
   
@@ -228,18 +246,18 @@
   insert_msg('Saving the figures')
   
   paper_figures %>% 
-    walk(save_figure, 
+    walk(pickle, 
          path = './paper/figures', 
          device = cairo_pdf)
   
   paper_figures %>% 
-    walk(save_figure, 
+    walk(pickle, 
          format = 'png', 
          path = './paper/figures', 
          dpi = 600)
   
   suppl_figures %>% 
-    walk(save_figure, 
+    walk(pickle, 
          path = './paper/supplementary figures', 
          device = cairo_pdf)
   

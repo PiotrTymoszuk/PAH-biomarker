@@ -9,7 +9,7 @@ output:
     reference_docx: ms_template.docx
     
 bibliography: pah_biblio.bib
-csl: sci_reports.csl
+csl: JGIM.csl
 
 header-includes:
   \usepackage{longtable}
@@ -34,7 +34,13 @@ header-includes:
 
 library(bookdown)
 
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, dev = "cairo_pdf")
+knitr::opts_chunk$set(echo = FALSE, 
+                      warning = FALSE, 
+                      message = FALSE, 
+                      dev = "cairo_pdf")
+
+flextable::set_flextable_defaults(font.family = 'Cambria', 
+                                  font.size = 10)
 
 
 ```
@@ -51,13 +57,11 @@ paper_tables$cohort_features %>%
   width(2:3, width = 4.6, unit = 'cm') %>% 
   width(4, width = 2.5, unit = 'cm') %>% 
   width(5, width = 2, unit = 'cm') %>% 
-  footnote(c(2, 8:10), 4, part = 'body', value = as_paragraph('Mann-Whitney U test.', ref_symbols = '1')) %>% 
-  footnote(c(2, 8:10), 5, part = 'body', value = as_paragraph('Wilcoxon r effect size statistic.'), ref_symbols = '2') %>% 
-  footnote(c(3:7, 11), 4, part = 'body', value = as_paragraph('\u03C7\u00B2 test.'), ref_symbols = '3') %>% 
-  footnote(c(3:7, 11), 5, part = 'body', value = as_paragraph('Cramer V effect size statistic.'), ref_symbols = '4') %>% 
-  footnote(12, 4, part = 'body', value = as_paragraph('Mentel-Haenszel test'), ref_symbols = '5') %>% 
-  font(part = 'all', fontname = 'Cambria') %>% 
-  fontsize(size = 10, part = 'all') %>% 
+  footnote(c(2, 8:10), 4, part = 'body', value = as_paragraph('Mann-Whitney U test.'), ref_symbols = 'a') %>% 
+  footnote(c(2, 8:10), 5, part = 'body', value = as_paragraph('r effect size statistic.'), ref_symbols = 'b') %>% 
+  footnote(c(3:7, 11), 4, part = 'body', value = as_paragraph('\u03C7\u00B2 test.'), ref_symbols = 'c') %>% 
+  footnote(c(3:7, 11), 5, part = 'body', value = as_paragraph('Cramer V effect size statistic.'), ref_symbols = 'd') %>% 
+  footnote(12, 4, part = 'body', value = as_paragraph('Mentel-Haenszel test'), ref_symbols = 'e') %>% 
   theme_vanilla
   
 ```
@@ -66,13 +70,13 @@ paper_tables$cohort_features %>%
 
 # Figures {#sec:figures}
 
-```{r fig-strobe, fig.width = mm_inch(paper_figures$strobe$w), fig.height = mm_inch(paper_figures$strobe$h), fig.cap = 'CONSORT flow diagram of the study analysis inclusion process.'}
+```{r fig-strobe, fig.width = mm_inch(paper_figures$strobe$w), fig.height = mm_inch(paper_figures$strobe$h), fig.cap = 'Flow diagram of the study analysis inclusion process.'}
 
 paper_figures$strobe$plot
 
 ```
 
-__Figure \@ref(fig:fig-strobe). CONSORT flow diagram of the study analysis inclusion process.__
+__Figure \@ref(fig:fig-strobe). Flow diagram of the study analysis inclusion process.__
 
 PH: pulmonary hypertension; RHC: right heart catheterization; CTEPH: chronic thromboembolic pulmonary hypertension.
 

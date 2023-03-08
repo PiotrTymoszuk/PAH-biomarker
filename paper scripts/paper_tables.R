@@ -32,6 +32,12 @@
            variable = ifelse(variable == '', 'N participants', variable)) %>% 
     set_names(c('Variable', 'IBK', 'LZ/W', 'Significance', 'Effect size'))
   
+  paper_tables$cohort_features <- 
+    mdtable(paper_tables$cohort_features, 
+            label = 'cohort_features', 
+            ref_name = 'cohort_features', 
+            caption = 'Characteristic of the study cohorts.')
+  
 # Supplementary Table S1: study variables -----
   
   insert_msg('Table S1: study variables')
@@ -48,6 +54,12 @@
     set_names(c('Variable', 'Description', 
                 'Label', 'Unit', 
                 'Stratification', 'Used in risk modeling'))
+  
+  suppl_tables$study_vars <- 
+    mdtable(suppl_tables$study_vars, 
+            label = 'study_vars', 
+            ref_name = 'study_vars', 
+            caption = 'Study variables.')
 
 # Supplementary Table S2: supplementary cohort characteristic -----
   
@@ -74,6 +86,12 @@
            variable = ifelse(variable == '', 'N participants', variable)) %>% 
     set_names(c('Variable', 'IBK', 'LZ/W', 'Significance', 'Effect size'))
   
+  suppl_tables$cohort_features <- 
+    mdtable(suppl_tables$cohort_features, 
+            label = 'cohort_features', 
+            ref_name = 'cohort_features', 
+            caption = 'Supplementary characteristic of the study cohorts.')
+  
 # Supplementary Table S3: results of univariable Cox modeling -----
   
   insert_msg('Table S3: univariable Cox results')
@@ -87,13 +105,22 @@
                                   paste0('ns (p = ', signif(p_adjusted, 2), ')'), 
                                   ifelse(p_adjusted < 0.001, 'p < 0.001', 
                                          paste('p =', signif(p_adjusted, 2)))), 
-            c_index = paste0(signif(c_index, 2), ' [', signif(c_lower_ci, 2), ' - ', 
+            c_index = paste0(signif(c_index, 2), ' [', 
+                             signif(c_lower_ci, 2), ' - ', 
                              signif(c_upper_ci, 2), ']'), 
             variable = translate_vars(variable), 
             rsq_mev = as.character(signif(rsq_mev, 2)), 
             cohort = globals$center_labs[cohort]) %>% 
-    select(cohort, variable, level, order, estimate, significance, c_index, rsq_mev) %>% 
-    set_names(c('Cohort', 'Variable', 'Level', 'Model order', 'HR', 'Significance', 'C index', 'R\u00B2'))
+    select(cohort, variable, level, order, 
+           estimate, significance, c_index, rsq_mev) %>% 
+    set_names(c('Cohort', 'Variable', 'Level', 'Model order', 
+                'HR', 'Significance', 'C index', 'R\u00B2'))
+  
+  suppl_tables$univariable_cox <- 
+    mdtable(suppl_tables$univariable_cox, 
+            label = 'univariable_cox', 
+            ref_name = 'univariable_cox', 
+            caption = 'Results of univariable Cox modeling.')
 
 # Table S4 and S5: characteristic of the participant clusters -----
   
@@ -103,11 +130,25 @@
     map(filter, 
         variable != 'PCWP') %>% 
     map(mutate, 
-        variable = translate_vars(variable, value = 'plot_lab', lexicon = data_ex$var_tbl), 
-           variable = ifelse(variable == '', 'N participants', variable), 
-        variable = stri_replace(variable, fixed = 'cm2', replacement = 'cm\u00B2')) %>% 
+        variable = translate_vars(variable, 
+                                  value = 'plot_lab', 
+                                  lexicon = data_ex$var_tbl), 
+           variable = ifelse(variable == '', 
+                             'N participants', variable), 
+        variable = stri_replace(variable, 
+                                fixed = 'cm2', 
+                                replacement = 'cm\u00B2')) %>% 
     map(set_names, 
-        c('Variable', 'Cluster #1', 'Cluster #2', 'Significance', 'Effect size'))
+        c('Variable', 'Cluster #1', 'Cluster #2', 
+          'Significance', 'Effect size'))
+  
+  suppl_tables[c('clust_IBK', 'clust_LZ')] <- 
+    list(x = suppl_tables[c('clust_IBK', 'clust_LZ')], 
+         label = c('clust_IBK', 'clust_LZ'), 
+         ref_name = c('clust_IBK', 'clust_LZ'), 
+         caption = c('Characteristic of the participant clusters in the Innsbruck cohort.', 
+                     'Characteristic of the participant clusters in the Linz/Vienna cohort.')) %>% 
+    pmap(mdtable)
   
 # Saving on the disc -----
   

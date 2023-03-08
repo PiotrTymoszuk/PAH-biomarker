@@ -9,7 +9,7 @@ output:
     reference_docx: ms_template.docx 
     
 bibliography: pah_biblio.bib
-csl: sci_reports.csl
+csl: JGIM.csl
 
 header-includes:
   \usepackage{longtable}
@@ -34,7 +34,14 @@ header-includes:
 
 library(bookdown)
 
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, dev = "png", dpi = 600)
+knitr::opts_chunk$set(echo = FALSE, 
+                      warning = FALSE, 
+                      message = FALSE, 
+                      dev = "png", 
+                      dpi = 600)
+
+flextable::set_flextable_defaults(font.family = 'Cambria', 
+                                  font.size = 10)
 
 
 ```
@@ -100,10 +107,8 @@ suppl_tables$study_vars %>%
   width(4, width = 1.8, unit = 'cm') %>% 
   width(5, width = 2.6, unit = 'cm') %>% 
   width(6, width = 2.2, unit = 'cm') %>% 
-  footnote(1, 1, part = 'header', value = as_paragraph('Variable name in the R analysis pipeline.'), ref_symbols = '1') %>% 
-  footnote(1, 3, part = 'header', value = as_paragraph('Variable name in the figures and tables.'), ref_symbols = '2') %>% 
-  font(part = 'all', fontname = 'Cambria') %>% 
-  fontsize(size = 10, part = 'all') %>% 
+  footnote(1, 1, part = 'header', value = as_paragraph('Variable name in the R analysis pipeline.'), ref_symbols = 'a') %>% 
+  footnote(1, 3, part = 'header', value = as_paragraph('Variable name in the figures and tables.'), ref_symbols = 'b') %>% 
   theme_vanilla
   
 ```
@@ -118,12 +123,10 @@ suppl_tables$cohort_features %>%
   width(2:3, width = 4.6, unit = 'cm') %>% 
   width(4, width = 2.5, unit = 'cm') %>% 
   width(5, width = 2, unit = 'cm') %>% 
-  footnote(c(2, 4:15), 4, part = 'body', value = as_paragraph('Mann-Whitney U test.', ref_symbols = '1')) %>% 
-  footnote(c(2, 4:15), 5, part = 'body', value = as_paragraph('Wilcoxon r effect size statistic.', ref_symbols = '2')) %>% 
-  footnote(c(3, 16, 17), 4, part = 'body', value = as_paragraph('\u03C7\u00B2 test.'), ref_symbols = '3') %>% 
-  footnote(c(3, 16, 17), 5, part = 'body', value = as_paragraph('Cramer V effect size statistic.'), ref_symbols = '4') %>% 
-  font(part = 'all', fontname = 'Cambria') %>% 
-  fontsize(size = 10, part = 'all') %>% 
+  footnote(c(2, 4:15), 4, part = 'body', value = as_paragraph('Mann-Whitney U test.'), ref_symbols = 'a') %>% 
+  footnote(c(2, 4:15), 5, part = 'body', value = as_paragraph('Wilcoxon r effect size statistic.'), ref_symbols = 'b') %>% 
+  footnote(c(3, 16, 17), 4, part = 'body', value = as_paragraph('\u03C7\u00B2 test.'), ref_symbols = 'c') %>% 
+  footnote(c(3, 16, 17), 5, part = 'body', value = as_paragraph('Cramer V effect size statistic.'), ref_symbols = 'd') %>% 
   theme_vanilla
   
 ```
@@ -143,10 +146,8 @@ suppl_tables$univariable_cox %>%
   width(7, width = 3, unit = 'cm') %>% 
   width(8, width = 1.5, unit = 'cm') %>% 
   merge_v(1:2) %>% 
-  footnote(1, 5, part = 'header', value = as_paragraph('Hazard ratio with 95% confidence interval.'), ref_symbols = '1') %>% 
-  footnote(1, 7, part = 'header', value = as_paragraph('Concordance index with 95% confidence interval.'), ref_symbols = '2') %>%
-  font(part = 'all', fontname = 'Cambria') %>% 
-  fontsize(size = 10, part = 'all') %>% 
+  footnote(1, 5, part = 'header', value = as_paragraph('Hazard ratio with 95% confidence interval.'), ref_symbols = 'a') %>% 
+  footnote(1, 7, part = 'header', value = as_paragraph('Concordance index with 95% confidence interval.'), ref_symbols = 'b') %>%
   theme_vanilla
   
 ```
@@ -161,12 +162,10 @@ suppl_tables$clust_IBK %>%
   width(2:3, width = 4.6, unit = 'cm') %>% 
   width(4, width = 2.5, unit = 'cm') %>% 
   width(5, width = 2, unit = 'cm') %>% 
-  footnote(c(2:3, 5:6, 8, 10:13, 15:17, 19, 22:26), 4, part = 'body', value = as_paragraph('Mann-Whitney U test.', ref_symbols = '1')) %>% 
-  footnote(c(2:3, 5:6, 8, 10:13, 15:17, 19, 22:26), 5, part = 'body', value = as_paragraph('Wilcoxon r effect size statistic.', ref_symbols = '2')) %>% 
-  footnote(c(4, 7, 9, 14, 18, 20:21), 4, part = 'body', value = as_paragraph('\u03C7\u00B2 test.'), ref_symbols = '3') %>% 
-  footnote(c(4, 7, 9, 14, 18, 20:21), 5, part = 'body', value = as_paragraph('Cramer V effect size statistic.'), ref_symbols = '4') %>% 
-  font(part = 'all', fontname = 'Cambria') %>% 
-  fontsize(size = 10, part = 'all') %>% 
+  footnote(c(2:3, 5:6, 8, 10:13, 15:17, 19, 22:26), 4, part = 'body', value = as_paragraph('Mann-Whitney U test.'), ref_symbols = 'a') %>% 
+  footnote(c(2:3, 5:6, 8, 10:13, 15:17, 19, 22:26), 5, part = 'body', value = as_paragraph('r effect size statistic.'), ref_symbols = 'b') %>% 
+  footnote(c(4, 7, 9, 14, 18, 20:21), 4, part = 'body', value = as_paragraph('\u03C7\u00B2 test.'), ref_symbols = 'c') %>% 
+  footnote(c(4, 7, 9, 14, 18, 20:21), 5, part = 'body', value = as_paragraph('Cramer V effect size statistic.'), ref_symbols = 'd') %>% 
   theme_vanilla
   
 ```
@@ -181,12 +180,10 @@ suppl_tables$clust_LZ %>%
   width(2:3, width = 4.6, unit = 'cm') %>% 
   width(4, width = 2.5, unit = 'cm') %>% 
   width(5, width = 2, unit = 'cm') %>% 
-  footnote(c(2:3, 5:6, 8, 10:13, 15:17, 19, 22:26), 4, part = 'body', value = as_paragraph('Mann-Whitney U test.', ref_symbols = '1')) %>% 
-  footnote(c(2:3, 5:6, 8, 10:13, 15:17, 19, 22:26), 5, part = 'body', value = as_paragraph('Wilcoxon r effect size statistic.', ref_symbols = '2')) %>% 
-  footnote(c(4, 7, 9, 14, 18, 20:21), 4, part = 'body', value = as_paragraph('\u03C7\u00B2 test.'), ref_symbols = '3') %>% 
-  footnote(c(4, 7, 9, 14, 18, 20:21), 5, part = 'body', value = as_paragraph('Cramer V effect size statistic.'), ref_symbols = '4') %>% 
-  font(part = 'all', fontname = 'Cambria') %>% 
-  fontsize(size = 10, part = 'all') %>% 
+  footnote(c(2:3, 5:6, 8, 10:13, 15:17, 19, 22:26), 4, part = 'body', value = as_paragraph('Mann-Whitney U test.'), ref_symbols = 'a') %>% 
+  footnote(c(2:3, 5:6, 8, 10:13, 15:17, 19, 22:26), 5, part = 'body', value = as_paragraph('r effect size statistic.'), ref_symbols = 'b') %>% 
+  footnote(c(4, 7, 9, 14, 18, 20:21), 4, part = 'body', value = as_paragraph('\u03C7\u00B2 test.'), ref_symbols = 'c') %>% 
+  footnote(c(4, 7, 9, 14, 18, 20:21), 5, part = 'body', value = as_paragraph('Cramer V effect size statistic.'), ref_symbols = 'd') %>% 
   theme_vanilla
   
 ```
@@ -226,13 +223,13 @@ __(C)__ Importance of particular clustering features was determined by comparing
 
 \newpage
 
-```{r fig-clust-diff, fig.width = mm_inch(suppl_figures$clust_diff$w), fig.height = mm_inch(suppl_figures$clust_diff$h), fig.cap = 'Differences in study variable between the participant clusters.'}
+```{r fig-clust-diff, fig.width = mm_inch(suppl_figures$clust_diff$w), fig.height = mm_inch(suppl_figures$clust_diff$h), fig.cap = 'Differences in study variables between the participant clusters.'}
 
 suppl_figures$clust_diff$plot
 
 ```
 
-__Supplementary Figure S\@ref(fig:fig-clust-diff). Differences in study variable between the participant clusters.__
+__Supplementary Figure S\@ref(fig:fig-clust-diff). Differences in study variables between the participant clusters.__
 
 Training Innsbruck (IBK) cohort participants were clustered as presented in __Figure 4__ and __Supplementary Figure S\@ref(fig:fig-cluster-qc)__. Cluster assignment of the test Linz/Vienna (LZ/W) cohort participants was accomplished by k-nearest neighbor label propagation procedure. Differences in the study variables (__Supplementary Table S\@ref(tab:tab-study-variables)__) between the clusters were determined by Mann-Whitney test with r effect size statistic or by $\chi^2$ test with Cramer V effect size statistic for numeric and categorical features, respectively. P values were adjusted for multiple testing with Benjamini-Hochberg method (pFDR). 
 Significance (pFDR) and effect size are presented in scatter plots. Each point represents one study parameter, parameters significantly different between the clusters are highlighted in red. Parameters found significant in both cohorts are labeled with their names. The significance cutoff is depicted as a dashed line. Numbers of participants assigned to the clusters are presented under the plots.
