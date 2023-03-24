@@ -1,0 +1,76 @@
+---
+title: "The Combination of Supervised and Unsupervised Learning based Risk Stratification and Phenotyping in Pulmonary Arterial Hypertension - a Long-term Retrospective Multicenter Trial"
+subtitle: "Figures for Reviewers"
+author: "Innsbruck PAH registry"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+
+output: 
+  bookdown::word_document2:   
+    reference_docx: ms_template.docx
+    
+bibliography: pah_biblio.bib
+csl: JGIM.csl
+
+header-includes:
+  \usepackage{longtable}
+  \usepackage{tabu}
+  \usepackage{caption}
+  \usepackage{makecell}
+  \usepackage{pdflscape}
+  \usepackage{array}
+  \usepackage{booktabs}
+  \usepackage{threeparttable}
+  \usepackage{threeparttablex}
+  \usepackage{wrapfig}
+  \usepackage{multirow}
+  \usepackage[normalem]{ulem}
+  \usepackage{colortbl}
+  \usepackage{xcolor}
+  \usepackage{float} \floatplacement{figure}{H} \floatplacement{table}{H}
+  \newcommand{\beginsupplement}{\setcounter{table}{0}  \renewcommand{\thetable}{S\arabic{table}}       \setcounter{figure}{0} \renewcommand{\thefigure}{S\arabic{figure}}}
+---
+
+```{r, setup, include = FALSE}
+
+library(bookdown)
+
+knitr::opts_chunk$set(echo = FALSE, 
+                      warning = FALSE, 
+                      message = FALSE, 
+                      dev = "cairo_pdf")
+
+flextable::set_flextable_defaults(font.family = 'Cambria', 
+                                  font.size = 10)
+
+
+```
+
+\newpage
+
+# Figures {#sec:figures}
+
+```{r fig-pool-clust, fig.width = figur::convert(rev_figures$pool_clust, to = 'in')$w, fig.height = figur::convert(rev_figures$pool_clust, to = 'in')$h, fig.cap = 'Clustering analysis with the pooled IBK and LZ/W data set.'}
+
+rev_figures$pool_clust$plot
+
+```
+
+__Figure \@ref(fig:fig-pool-clust). Clustering analysis with the pooled IBK and LZ/W data set.__ 
+
+_Clustering of the pooled data set with participants of the Innsbruck (IBK) and Linz/Vienna cohorts in respect to the survival-associated factors identified by elastic-net modeling (Figure 2A) was investigated by several algorithms (PAM: partitioning around medoids, HCl: hierarchical clustering, k-MEANS and SOM/HCl: combined self-organizing map/hierarchical clustering). The optimal cluster number k was determined by analysis of the curve of within-cluster sum of squares and maximal silhouette statistic. Explanatory performance of the algorithms was assessed by the fraction of 'explained' clustering variance (ratio of between-cluster sum of squares to total sum of squares) and correct cluster assignment rate in 10-fold cross-validation (CV). Statistic values are presented in bar plots. Algorithm, distance metric and k number of clusters are indicated in the Y axis._
+
+\newpage
+
+```{r fig-rf-ensemble, fig.width = figur::convert(rev_figures$rf_ensemble, to = 'in')$w, fig.height = figur::convert(rev_figures$rf_ensemble, to = 'in')$h, fig.cap = 'Development of a Random Forest ensemble of PAH risk assessment tools and its performance at predicting overall survival.'}
+
+rev_figures$rf_ensemble$plot
+
+```
+
+__Figure \@ref(fig:fig-rf-ensemble). Development of a Random Forest ensemble of PAH risk assessment tools and its performance at predicting overall survival.__ 
+
+_Elastic Net score was developed as presented in Figure 2. The ensemble models of the Elastic Net score and established PAH risk assessment tools (FPHR 3p: French Pulmonary Hypertension Registry 3 parameter score, FPHR 4p: French Pulmonary Hypertension Registry 4 parameter score, COMPERA: Comparative, Prospective Registry of Newly Initiated Therapies for Pulmonary Hypertension score, mRASP: modified Risk Assessment Score of PAH.) was established with the LASSO Cox regression (Supplementary Figure S3) and survival Random Forest algorithms (number of trees: `r rf_tools$rf_models$IBK_0$ntree`, mtry = `r rf_tools$rf_models$IBK_0$mtry`, splitting rule: `r rf_tools$rf_models$IBK_0$splitrule`, minimal node size: `r rf_tools$rf_models$IBK_0$nodesize`)._
+
+_(A) Permutation importance of explanatory variables of the RF ensemble model._
+
+_(B) Predictive performance of the Elastic Net score, LASSO ensemble, Random Forest (RF) ensemble and single PAH risk scores at predicting overall survival was assessed by concordance index (C-index) and integrated Brier score (IBS). C-indexes and IBS for the risk assessment tools in the Innsbruck (IBK) and Linz/Vienna (LZ/W) cohorts are displayed in scatter plots._

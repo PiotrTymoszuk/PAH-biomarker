@@ -1,0 +1,159 @@
+---
+title: "The Combination of Supervised and Unsupervised Learning based Risk Stratification and Phenotyping in Pulmonary Arterial Hypertension - a Long-term Retrospective Multicenter Trial"
+subtitle: "Figures and Tables"
+author: "Innsbruck PAH registry"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+
+output: 
+  bookdown::word_document2:   
+    reference_docx: ms_template.docx
+    
+bibliography: pah_biblio.bib
+csl: JGIM.csl
+
+header-includes:
+  \usepackage{longtable}
+  \usepackage{tabu}
+  \usepackage{caption}
+  \usepackage{makecell}
+  \usepackage{pdflscape}
+  \usepackage{array}
+  \usepackage{booktabs}
+  \usepackage{threeparttable}
+  \usepackage{threeparttablex}
+  \usepackage{wrapfig}
+  \usepackage{multirow}
+  \usepackage[normalem]{ulem}
+  \usepackage{colortbl}
+  \usepackage{xcolor}
+  \usepackage{float} \floatplacement{figure}{H} \floatplacement{table}{H}
+  \newcommand{\beginsupplement}{\setcounter{table}{0}  \renewcommand{\thetable}{S\arabic{table}}       \setcounter{figure}{0} \renewcommand{\thefigure}{S\arabic{figure}}}
+---
+
+```{r, setup, include = FALSE}
+
+library(bookdown)
+
+knitr::opts_chunk$set(echo = FALSE, 
+                      warning = FALSE, 
+                      message = FALSE, 
+                      dev = "cairo_pdf")
+
+flextable::set_flextable_defaults(font.family = 'Cambria', 
+                                  font.size = 10)
+
+
+```
+
+\newpage
+
+# Tables
+
+```{r tab-cohort-features, tab.cap = 'Characteristic of the Innsbruck (IBK) and Linz/Vienna (LZ/W) study cohorts. Numeric variables are presented as medians with interquartile ranges (IQR) and ranges. Categorical variables are presented as percentages and counts within the complete observation set.'}
+
+flextable::flextable(paper_tables$cohort_features) %>% 
+  width(1, width = 3.8, unit = 'cm') %>% 
+  width(2:3, width = 4.0, unit = 'cm') %>% 
+  width(4, width = 2.5, unit = 'cm') %>% 
+  width(5, width = 2, unit = 'cm') %>% 
+  footnote(1, 1, 
+           value = as_paragraph('WHO class: WHO functional class; SMWD: six-minute walking distance; mPAP: mean pulmonary arterial pressure; PVR: pulmonary vascular resistance; OS: overall survival.'), 
+           part = 'header', 
+           ref_symbols = 'a') %>% 
+  footnote(1, 4:5, 
+           value = as_paragraph('Numeric variables: Mann-Whitney U test with r effect size statistic; categorical variables: \u03C7\u00B2 test with Cramer V effect size statistic; survival: log-rank test.'), 
+           part = 'header', 
+           ref_symbols = 'b') %>% 
+  theme_vanilla
+
+```
+
+\newpage
+
+# Figures {#sec:figures}
+
+```{r fig-strobe, fig.width = figur::convert(paper_figures$strobe, to = 'in')$w, fig.height = figur::convert(paper_figures$strobe, to = 'in')$h, fig.cap = 'Flow diagram of the study analysis inclusion process.'}
+
+paper_figures$strobe$plot
+
+```
+
+__Figure \@ref(fig:fig-strobe). Flow diagram of the study analysis inclusion process.__ 
+
+_PH: pulmonary hypertension; RHC: right heart catheterization; CTEPH: chronic thromboembolic pulmonary hypertension._
+
+\newpage
+
+```{r fig-elanet, fig.width = figur::convert(paper_figures$elanet, to = 'in')$w, fig.height = figur::convert(paper_figures$elanet, to = 'in')$h, fig.cap = 'Multi-parameter modeling of PAH survival with Elastic Net Cox regression.'}
+
+paper_figures$elanet$plot
+
+```
+
+__Figure \@ref(fig:fig-elanet). Multi-parameter modeling of PAH survival with Elastic Net Cox regression.__ 
+
+_The Elastic Net multi-parameter Cox regression model with the set of `r nrow(pah_study$mod_variables)` (Supplementary Table S1) independent variables and overall survival as a response was developed in the training Innsbruck cohort. Numeric independent variables were median centered and their first and second order terms included in the model. Numbers of complete observations and mortality is indicated in B._
+
+_(A) Non-zero model coefficients represented as hazard ratios (HR). Plot points are labeled with their HR values._ 
+
+_(B) Association of overall survival with the Elastic Net model linear prediction score in the training IBK and test Linz/Vienna (LZ/W) cohort was assessed by Kaplan-Meier analysis. Significance of the survival differences in the study participants stratified by the linear predictor score tertiles (T1: 0 - 33, T2: 34 - 66, T3: 66 - 100 percentile) was determined by log-rank test adjusted for multiple testing with Benjamini-Hochberg method. P values are shown in the plots, numbers of complete observations and mortality are indicated in the plot captions._
+
+\newpage
+
+```{r fig-risk-tools, fig.width = figur::convert(paper_figures$risk_tools, to = 'in')$w, fig.height = figur::convert(paper_figures$risk_tools, to = 'in')$h, fig.cap = 'Performance of PAH risk assessment tools.'}
+
+paper_figures$risk_tools$plot
+
+```
+
+__Figure \@ref(fig:fig-risk-tools). Performance of PAH risk assessment tools.__ 
+
+_The Elastic Net score was developed as presented in Figure \@ref(fig:fig-elanet). The ensemble of Elastic Net score and established risk assessment tools (FPHR 3p: French Pulmonary Hypertension Registry 3 parameter score, FPHR 4p: French Pulmonary Hypertension Registry 4 parameter score, COMPERA: Comparative, Prospective Registry of Newly Initiated Therapies for Pulmonary Hypertension score, mRASP: modified Risk Assessment Score of PAH) was developed by LASSO Cox regression as presented in Supplementary Figure S3. Predictive performance of the Elastic Net score, ensemble and single PAH risk scores at predicting overall survival was assessed by concordance index (C-index) and integrated Brier score (IBS). C-indexes and IBS for the risk assessment tools in the Innsbruck (IBK) and Linz/Vienna (LZ/W) cohorts are displayed in scatter plots._
+
+\newpage
+
+```{r fig-part-clust, fig.width = figur::convert(paper_figures$part_clust, to = 'in')$w, fig.height = figur::convert(paper_figures$part_clust, to = 'in')$h, fig.cap = 'Clustering of the study participants.'}
+
+paper_figures$part_clust$plot
+
+```
+
+__Figure \@ref(fig:fig-part-clust). Clustering of the study participants.__ 
+
+_Clustering of the training Innsbruck (IBK) cohort participants in respect to the survival-associated factors identified by Elastic Net modeling (Figure \@ref(fig:fig-elanet)) was investigated by PAM (partition around medoids) algorithm with cosine distance. Numeric clustering features were median centered prior to the clustering. Cluster assignment in the training Linz/Vienna cohort (LZ/W) was done by an inverse distance weighted k-nearest neighbor classifier. Numbers of individuals assigned to the PAH clusters are presented in the plot captions or legends._
+
+_(A) PAH cluster assignment overlaid on the 2-dimensional cosine-distance UMAP (Uniform Manifold Approximation and Projection for Dimension Reduction) layout plots. Percentages of variance associated with the components are indicated in the plot axes._
+
+_(B) Differences in the clustering features between the PAH clusters were assessed by Mann-Whitney test corrected for multiple testing with Benjamini-Hochberg method. Normalized, median-centered values of the clustering factors are shown in violin plots. Points represent single observations. P values are indicated in the Y axes._
+
+_CI: cardiac index; NT-pro-BNP: N terminal pro brain natriuretic peptide; RDW: red blood cell distribution width; PVR: pulmonary vascular resistance; RAA: right atrial area; SMWD: six minute walking distance._
+
+\newpage
+
+```{r fig-cluster-risk, fig.width = figur::convert(paper_figures$cluster_risk, to = 'in')$w, fig.height = figur::convert(paper_figures$cluster_risk, to = 'in')$h, fig.cap = 'Risk assessment and survival differences in the PAH clusters.'}
+
+paper_figures$cluster_risk$plot
+
+```
+
+__Figure \@ref(fig:fig-cluster-risk). Risk assessment and survival differences in the PAH clusters.__ 
+
+_Risk assessment strata distribution and overall survival was compared between the study participant clusters with $\chi^2$ and log-rank test, respectively. P values were adjusted for multiple testing with Benjamini-Hochberg method. Numbers of individuals assigned to the clusters are presented in the Y axes or in the plot legends._
+
+_(A - E) Risk assessment strata frequencies in the PAH clusters presented in stack plots. All differences were significant with p < 0.001._
+
+_(F) Differences in overall survival in the PAH clusters visualized in Kaplan-Meier plots. P values are indicated in the plots. Numbers of complete observations and deaths are shown in the plot captions._
+
+_FPHR 3p: French Pulmonary Hypertension Registry 3 parameter score, FPHR 4p: French Pulmonary Hypertension Registry 4 parameter score, COMPERA: Comparative, Prospective Registry of Newly Initiated Therapies for Pulmonary Hypertension score, mRASP: modified Risk Assessment Score of PAH; int.: intermediate._
+
+\newpage
+
+```{r fig-summary, fig.width = figur::convert(paper_figures$summary, to = 'in')$w, fig.height = figur::convert(paper_figures$summary, to = 'in')$h, fig.cap = 'Summary of the analysis results.'}
+
+paper_figures$summary$plot
+
+```
+
+__Figure \@ref(fig:fig-summary). Summary of the analysis results.__ 
+
+_RHC: right heart catheterization; CI: cardiac index; NT-pro-BNP: N terminal pro brain natriuretic peptide; RDW: red blood cell distribution width; PVR: pulmonary vascular resistance; RAA: right atrial area; SMWD: six minute walking distance._

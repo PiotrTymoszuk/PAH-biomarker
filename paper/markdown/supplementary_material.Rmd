@@ -1,0 +1,387 @@
+---
+title: "The Combination of Supervised and Unsupervised Learning based Risk Stratification and Phenotyping in Pulmonary Arterial Hypertension - a Long-term Retrospective Multicenter Trial"
+subtitle: "Supplementary Material"
+author: "Innsbruck PAH registry"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+
+output: 
+  bookdown::word_document2:   
+    reference_docx: ms_template.docx 
+    
+bibliography: pah_biblio.bib
+csl: JGIM.csl
+
+header-includes:
+  \usepackage{longtable}
+  \usepackage{tabu}
+  \usepackage{caption}
+  \usepackage{makecell}
+  \usepackage{pdflscape}
+  \usepackage{array}
+  \usepackage{booktabs}
+  \usepackage{threeparttable}
+  \usepackage{threeparttablex}
+  \usepackage{wrapfig}
+  \usepackage{multirow}
+  \usepackage[normalem]{ulem}
+  \usepackage{colortbl}
+  \usepackage{xcolor}
+  \usepackage{float} \floatplacement{figure}{H} \floatplacement{table}{H}
+  \newcommand{\beginsupplement}{\setcounter{table}{0}  \renewcommand{\thetable}{S\arabic{table}}       \setcounter{figure}{0} \renewcommand{\thefigure}{S\arabic{figure}}}
+---
+
+```{r, setup, include = FALSE}
+
+library(bookdown)
+
+knitr::opts_chunk$set(echo = FALSE, 
+                      warning = FALSE, 
+                      message = FALSE, 
+                      dev = "png", 
+                      dpi = 600)
+
+flextable::set_flextable_defaults(font.family = 'Cambria', 
+                                  font.size = 10)
+
+
+```
+
+\newpage
+
+\beginsupplement
+
+# Supplementary Methods
+
+## Software
+
+Data transformation, analysis and result visualization was accomplished by R version 4.2.3. 
+
+Import of the study data was accomplished with the _readxl_ package [@Wickham2022]. 
+Tabular data were handled by the _tidyverse_ package bundle [@Wickham2016] and the packages _rlang_ [@Henry2022] and [_trafo_](https://github.com/PiotrTymoszuk/trafo). 
+Text data were handled with the _stringi_ package [@Gagolewski2021].
+
+Exploratory data analysis and statistical hypothesis for numeric and categorical variables testing was done with _rstatix_ [@Kassambara2021] and [_ExDA_](https://github.com/PiotrTymoszuk/ExDA). 
+Survival analysis was accomplished with the packages _survival_ [@Therneau2000], _survminer_ [@Kassambara2016], _pec_ [@Gerds2022], _rms_ [@Harrell2023], _glmnet_ [@Friedman2010], _survmisc_ [@Dardis2022] and the development package [_coxExtensions_](https://github.com/PiotrTymoszuk/coxExtensions). 
+Cross-validation folds were generated with _caret_ [@Kuhn2008]. 
+Clustering analysis was done with the packages _cluster_ [@Schubert2019], _philentropy_ [@Drost2018], _factoextra_ [@Kassambara2020], _umap_ [@Konopka2022] and [_clustTools_](https://github.com/PiotrTymoszuk/clustTools). 
+
+Results were visualized with _ggplot2_ [@Wickham2016] (plots of model estimates, violin, bubble, bar and Forest plots), [_ExDA_](https://github.com/PiotrTymoszuk/ExDA) (stack plots, plots of effect sizes/significance of differences between clusters), _survminer_ and [_coxExtensions_](https://github.com/PiotrTymoszuk/coxExtensions) (Kaplan-Meier plots) and [_clustTools_](https://github.com/PiotrTymoszuk/clustTools) (UMAP layout plots, cluster diagnostic plots). 
+Tables were generated with _flextable_ [@Gohel2022], figures were created with _cowplot_ [@Wilke2019].
+
+The Supplementary Material file was built with _rmarkdown_ environment [@Allaire2022] with the packages _knitr_ [@Xie2022] and _bookdown_ [@Xie2016].
+
+## Data import and transformation, visualization, descriptive statistic
+
+The study dataset was imported into from an Excel file (function `read_excel()`, package _readxl_) and formatted with an in-house developed script.
+
+For univariable survival modeling and construction of candidate risk signatures, a set of categorical `r nrow(pah_study$mod_variables)` demographic, biochemical, right-heart catheter, laboratory, ultrasound and lung function parameters recorded at PH diagnosis was used. 
+To improve normality of some independent variables (NT-pro-BNP, RDW, TF-Sat, ferritin) prior to survival modeling, log transformation was applied. 
+For the list of modeling variables and their transformation and stratification scheme, see: __Supplementary Table S\@ref(tab:tab-study-vars)__.
+
+## Descriptive statistic, hypothesis testing, multiple comparisons
+
+Numeric variables are presented as medians with interquartile ranges (IQR) and ranges. 
+Categorical variables are shown as percentages and counts within the complete observation set for each variable category (function `explore()`, package [_ExDA_](https://github.com/PiotrTymoszuk/ExDA)). 
+
+As the some of the analyzed numeric variables were non-normally distributed as checked by Shapiro-Wilk test (function `explore(what = 'normality')`, package [_ExDA_](https://github.com/PiotrTymoszuk/ExDA)), differences in median values of numeric variables between the study cohorts or participant clusters were investigated by Mann-Whitney test and r effect size statistic. 
+Differences in frequency distribution of categorical variables between the study cohorts or participant clusters were assessed by $\chi^2$ test and Cramer's V effect size statistic. 
+Statistical significance for the comparisons was determined with the function `compare_variables()` from the [_ExDA_](https://github.com/PiotrTymoszuk/ExDA) package.
+
+Risk strata returned by established PAH risk assessment tools (mRASP: modified risk assessment score of PAH; COMPERA: comparative, prospective registry of newly initiated therapies for pulmonary hypertension score; SPAHR: Swedish pulmonary arterial hypertension registry score; FPHR 3p: french pulmonary arterial hypertension registry score; FPHR 4p: french pulmonary arterial hypertension registry score, 4 parameters) was converted to numeric values (mRASP/COMPERA/SPAHR: low: 1, intermediate: 2, high risk: 3, FPHR scales: number of risk factors). 
+Their correlation with the newly developed Elastic Net score was assessed by Spearman's test (function `correlate_variables(type = 'spearman')`, package [_ExDA_](https://github.com/PiotrTymoszuk/ExDA)). 
+
+Differences in survival between the participant clusters or participants stratified by risk score tertiles or by the PAH cluster assignment were compared by Kaplan-Meier (KM) analysis with log-rank test [@Harrington1982; @Therneau2000; @Kassambara2016] (functions `surv_fit()` and `surv_pvalue()`, package _survminer_). 
+Fractions of surviving participants were presented in Kaplan-Meier plots (function `ggsurvplot()`, package _survminer_).
+
+For each analysis task and cohort, p values were corrected for multiple comparisons with Benjamini-Hochberg method [@Benjamini1995]. 
+
+## Univariable Cox survival modeling
+
+Association of independent categorical and numeric variables (__Supplementary Table S\@ref(tab:tab-study-vars)__) with overall survival time was assessed by series of univariable Cox proportional hazard models constructed for the Innsbruck and Linz/Vienna cohort using the _survival_ [@Therneau2000] and [_coxExtensions_](https://github.com/PiotrTymoszuk/coxExtensions) packages (functions `coxph()` and `as_coxex()`). 
+Numeric variables were normalized median-centered (function `scale(x, center = median(x))`). 
+To account for non-linear associations of numeric independent variables, both 1^st^ and 2^nd^ order terms were included in the Cox models. 
+Significance of the hazard ratio estimates was determined by Wald Z test. 
+P values were corrected for multiple comparisons with Benjamini-Hochberg method [@Benjamini1995]. 
+Proportional hazard assumption was checked with the `summary(type = 'assumptions')` method (package [_coxExtensions_](https://github.com/PiotrTymoszuk/coxExtensions), a wrapper around `cox.zph()` from `survival`) [@Grambsch1994]. 
+Concordance indexes (C-index) [@Harrell1996], integrated Brier scores (IBS) [@Graf1999] and $R^2$ [@Dardis2022] served as measures of predictive performance of the Cox models and were computed with the `summary(type = 'fit')` method (package [_coxExtensions_](https://github.com/PiotrTymoszuk/coxExtensions), employing the `concordance()`, `pec()` and `rsq()` functions from the packages _survival_, _pec_ and _survMisc_). 
+
+For the full modeling results, see: __Supplementary Table S\@ref(tab:tab-univariable-cox)__.
+
+## Multivariable Cox survival modeling with the Elastic Net technique
+
+Multi-parameter Cox modeling with the set of independent categorical and numeric variables (__Supplementary Table S\@ref(tab:tab-study-vars)__) was accomplished by Elastic Net machine learning technique [@Friedman2010; @Simon2011a]. 
+Data pre-processing included normalization and median centering of numeric independent variables (function `scale(x, center = median(x))`) and conversion of categorical features to dummy numeric variables (function `model.matrix()`). 
+To account for non-linear associations of numeric independent variables, both 1^st^ and 2^nd^ order terms were included in the elastic net model development. 
+The Elastic Net Cox proportional hazard model was trained in the Innsbruck cohort (function `glmnet(alpha = 0.5, family = 'cox')`, package _glmnet_). 
+The optimal lambda parameter ($\lambda$ = `r signif(multi_cox$opt_lambda$lambda[1], 3)`) for the training cohort model construction was found by 200-repetition 10-fold cross-validation (function `cv.glmnet()`, package _glmnet_) and corresponded to the minimum of cross-validation error (`lambda.min` parameter). 
+The values of non-zero Elastic Net model coefficients are presented in __Figure 2A__. 
+Subsequently, the Elastic Net model linear predictor (LP) scores were calculated for the training IBK and test Linz/Vienna cohort and their association with overall survival was assessed by univariable Cox modeling [@Royston2013]. 
+C-index, IBS and $R^2$ served as performance measures as described above for univariable Cox modeling [@Harrell1996; @Graf1999; @Dardis2022] (__Supplementary Table S\@ref(tab:tab-risk-tools)__). 
+Differences in survival between study participants stratified by the LP score tertiles were assessed by log-rank test as described above [@Kassambara2016; @Harrington1982].
+
+## LASSO ensemble model
+
+Multi-parameter Cox model including the newly developed Elastic Net score and established PAH risk assessment tools available for both cohorts (mRASP, SPAHR, COMPERA: low, intermediate and high risk strata, FPHR 3p and FPHR 4p: number of risk factors coded as categorical variable) were constructed with the LASSO algorithm [@Friedman2010; @Tibshirani1996; @Simon2011a]. 
+This LASSO ensemble model was trained in the Innsbruck cohort (function `glmnet(alpha = 0.5, family = 'cox')`, package _glmnet_). 
+The optimal lambda parameter ($\lambda$ = `r signif(multi_cox$opt_lambda$lambda[1], 3)`) for the training cohort model construction was found by 200-repetition 10-fold cross-validation (function `cv.glmnet()`, package _glmnet_) and corresponded to the minimum of cross-validation error (`lambda.min` parameter). 
+The values of non-zero LASSO model coefficients are presented in __Supplementary Figure \@ref(fig:fig-ensemble)A__. 
+Subsequently, the LASSO model linear predictor (LP) scores were calculated for the training IBK and test Linz/Vienna cohort and their association with overall survival was assessed by univariable Cox modeling [@Royston2013] analogically to the Elastic Net scores described above. 
+Performance metrics of the LASSO ensemble are presented in __Supplementary Table S\@ref(tab:tab-risk-tools)__.
+
+## Comparison of risk assessment tools
+
+Univariable Cox models were constructed for the Elastic Net score and the LASSO ensemble described above and for the established PAH risk assessment tools available for both cohorts (mRASP, SPAHR, COMPERA: low, intermediate and high risk strata, FPHR 3p and FPHR 4p: number of risk factors coded as categorical variable) as described for univariable Cox modeling. 
+Performance metrics: C-indexes, IBS and $R^2$ are presented in __Supplementary Table S\@ref(tab:tab-risk-tools)__.
+
+## Clustering of the study participants
+
+Clustering of the study participants in the Innsbruck training cohort in respect to the variables found associated with overall survival by the Elastic Net Cox modeling (__Figure 2A__; `r exchange(unique(multi_plots$coefs$variable), dict = globals$var_labs) %>% paste(collapse = ', ')`) was done with the PAM algorithm (partitioning around medoids) [@Schubert2019] with the cosine distance between the study participants [@Drost2018] (clustering objects generated with `kcluster(distance_method = 'cosine', clust_fun = 'pam', k = 2)`, package [_clustTools_](https://github.com/PiotrTymoszuk/clustTools)). 
+Prior to clustering, the numeric variables were normalized and median centered (function `scale(x, center = median(x))`). 
+The PAM/cosine distance clustering procedure demonstrated the superior fraction of 'explained' clustering variance (ratio of total between cluster sum of squared to total sum of squares) and the optimal performance in 10-fold cross-validation measured by the fraction of correct cluster assignments [@Lange2004] as compared with hierarchical clustering, k-means and self-organizing map algorithms (__Supplementary Figure S\@ref(fig:fig-cluster-qc)A__). 
+Clustering variances and CV accuracy were computed with the `var()` and `cv()` methods provided by the [_clustTools_](https://github.com/PiotrTymoszuk/clustTools) called for the clustering objects. 
+
+The choice of cluster number k was based on the bend of the within-cluster sum-of-squares curve, the peak value of silhouette statistic [@Rousseeuw1987; @Kassambara2020] and optimal cluster assignment accuracy in 10-fold CV assessed for the PAM/cosine distance clustering structures generated for multiple k values (methods `plot()` and `cv()`, package [_clustTools_](https://github.com/PiotrTymoszuk/clustTools)) (__Supplementary Figure S\@ref(fig:fig-cluster-qc)B__).
+
+The importance of specific clustering features was determined by comparing the 'explained' clustering variances of the original clustering structure with the clustering objects with randomly re-shuffled clustering features [@Sonnweber2022] with the `impact()` function from the [_clustTools_](https://github.com/PiotrTymoszuk/clustTools) package. 
+
+Assignment of the test Linz/Vienna cohort participants to the PAH clusters defined in the Innsbruck cohort was done with an inverse distance-weighted 7-nearest neighbor label propagation procedure [@Sonnweber2022; @Leng2014; @Sahanic2021]. 
+Assignment of participants to the PAH clusters was visualized with two-dimensional cosine distance UMAP (Uniform Manifold Approximation and Projection, function `plot(type = 'components', red_fun = 'umap', kdim = '2', with = 'data')`, package [_clustTools_](https://github.com/PiotrTymoszuk/clustTools)) [@Konopka2022; @McInnes2018].
+
+Differences in study variables between the participant clusters were determined by Mann-Whitney or $\chi^2$ test as described above (__Supplementary Tables S\@ref(tab:tab-clust-IBK) - S\@ref(tab:tab-clust-IBK)__). 
+Differences in overall survival between the clusters were compared with KM method and log-rank test as described above.
+
+# Data and code availability
+
+The study data set is available at serious request to the corresponding author. The analysis R code was deposited on GitHub (https://github.com/PiotrTymoszuk/PAH-biomarker).
+
+\newpage
+
+# Supplementary Tables {#sec:tables}
+
+```{r tab-study-vars, tab.cap = 'Study variables.'}
+
+flextable::flextable(suppl_tables$study_vars) %>% 
+  width(1, width = 3.5, unit = 'cm') %>% 
+  width(2, width = 5.2, unit = 'cm') %>%
+  width(3, width = 3, unit = 'cm') %>% 
+  width(4, width = 1.8, unit = 'cm') %>% 
+  width(5, width = 2.6, unit = 'cm') %>% 
+  width(6, width = 2.2, unit = 'cm') %>% 
+  theme_vanilla
+
+```
+
+\newpage
+
+```{r tab-cohort-features, tab.cap = 'Supplementary characteristic of the study cohorts. Numeric variables are presented as medians with interquartile ranges (IQR) and ranges. Categorical variables are presented as percentages and counts within the complete observation set.'}
+
+flextable::flextable(suppl_tables$cohort_features) %>% 
+  width(1, width = 3.8, unit = 'cm') %>% 
+  width(2:3, width = 4.0, unit = 'cm') %>% 
+  width(4, width = 2.5, unit = 'cm') %>% 
+  width(5, width = 2, unit = 'cm') %>% 
+  footnote(1, 1, 
+           value = as_paragraph('mRAP: mean right atrial pressure; SO2: oxygen saturation; NT-pro-BNP: N-terminal pro-brain natriuretic peptide; CI: cardiac index; RAA: right atrial area; MCV: mean corpuscular volume; RDW: red blood cell distribution width; FT: ferritin; mRASP: modified risk assessment score of PAH; COMPERA: comparative, prospective registry of newly initiated therapies for pulmonary hypertension score; SPAHR: Swedish pulmonary arterial hypertension registry score; FPHR 3p: french pulmonary arterial hypertension registry score, 3 parameters; FPHR 4p: french pulmonary arterial hypertension registry score, 4 parameters.'), 
+           part = 'header', 
+           ref_symbols = 'a') %>% 
+  footnote(1, 4:5, 
+           value = as_paragraph('Numeric variables: Mann-Whitney U test with r effect size statistic; categorical variables: \u03C7\u00B2 test with Cramer V effect size statistic; survival: log-rank test.'), 
+           part = 'header', 
+           ref_symbols = 'b') %>% 
+  theme_vanilla
+
+```
+
+\newpage
+
+```{r tab-univariable-cox, tab.cap = 'Results of univariable Cox modeling in the Innsbruck (IBK) and Linz/Vienna (LZ/W) cohort'}
+
+flextable::flextable(suppl_tables$univariable_cox) %>% 
+  width(1, width = 1.7, unit = 'cm') %>% 
+  width(2, width = 2.5, unit = 'cm') %>% 
+  width(3, width = 1.4, unit = 'cm') %>% 
+  width(4, width = 1.4, unit = 'cm') %>% 
+  width(5, width = 3, unit = 'cm') %>% 
+  width(6, width = 2.7, unit = 'cm') %>% 
+  width(7, width = 3, unit = 'cm') %>% 
+  width(8, width = 1.6, unit = 'cm') %>% 
+  width(9, width = 1.3, unit = 'cm') %>% 
+  merge_v(1) %>% 
+  merge_v(2) %>% 
+  footnote(1, 2, 
+           value = as_paragraph('SMWD: six-minute walking distance; mPAP: mean pulmonary arterial pressure; PVR: pulmonary vascular resistance; PCWP: pulmonary capillary wedge pressure; RDW: red blood cell distribution width; FT: ferritin; TF-Sat: transferrin saturation; MCV: mean corpuscular volume; NT-pro-BNP: N-terminal pro-brain natriuretic peptide; RAA: right atrial area; CI: cardiac index; WHO class: WHO functional class; SO2: oxygen saturation.'), 
+           part = 'header', 
+           ref_symbols = 'a') %>% 
+  footnote(1, 5, 
+           value = as_paragraph('HR, 95% CI: hazard ratio with 95% confidence intervals.'), 
+           part = 'header', 
+           ref_symbols = 'b') %>% 
+  footnote(1, 7, 
+           value = as_paragraph('C index, 95% CI: concordance index with 95% confidence intervals.'), 
+           part = 'header', 
+           ref_symbols = 'c') %>% 
+  footnote(1, 9, 
+           value = as_paragraph('IBS: integrated Brier score.'), 
+           part = 'header', 
+           ref_symbols = 'd') %>% 
+  theme_vanilla
+
+```
+
+\newpage
+
+```{r tab-risk-tools, tab.cap = 'Performance of the Elastic Net score and established risk assessment tools at predicting overall PAH survival.'}
+
+flextable::flextable(suppl_tables$risk_tools) %>% 
+  width(1, width = 1.9, unit = 'cm') %>% 
+  width(2, width = 4, unit = 'cm') %>% 
+  width(3, width = 4, unit = 'cm') %>% 
+  width(4:5, width = 1.9, unit = 'cm') %>% 
+  merge_v(1) %>% 
+  footnote(1, 2, 
+           value = as_paragraph('LASSO ensemble: LASSO regression model with the Elastic Net score and established risk assessment scales; mRASP: modified risk assessment score of PAH; COMPERA: comparative, prospective registry of newly initiated therapies for pulmonary hypertension score; SPAHR: Swedish pulmonary arterial hypertension registry score; FPHR 3p: french pulmonary arterial hypertension registry score, 3 parameters; FPHR 4p: french pulmonary arterial hypertension registry score, 4 parameters.'), 
+           part = 'header', 
+           ref_symbols = 'a') %>% 
+  footnote(1, 3, 
+           value = as_paragraph('C index, 95% CI: concordance index with 95% confidence intervals.'), 
+           part = 'header', 
+           ref_symbols = 'b') %>% 
+    footnote(1, 5, 
+           value = as_paragraph('IBS: integrated Brier score.'), 
+           part = 'header', 
+           ref_symbols = 'c') %>% 
+  theme_vanilla
+
+```
+
+\newpage
+
+```{r tab-clust-IBK, tab.cap = 'Characteristic of the participant clusters in the Innsbruck cohort. Numeric variables are presented as medians with interquartile ranges (IQR) and ranges. Categorical variables are presented as percentages and counts within the complete observation set.'}
+
+suppl_tables$clust_IBK %>% 
+  flextable %>% 
+  width(1, width = 4.5, unit = 'cm') %>% 
+  width(2:3, width = 4.6, unit = 'cm') %>% 
+  width(4, width = 2.5, unit = 'cm') %>% 
+  width(5, width = 1.9, unit = 'cm') %>% 
+  footnote(1, 1, 
+           value = as_paragraph('SMWD: six-minute walking distance; mPAP: mean pulmonary arterial pressure; PVR: pulmonary vascular resistance; PCWP: pulmonary capillary wedge pressure; RDW: red blood cell distribution width; FT: ferritin; TF-Sat: transferrin saturation; MCV: mean corpuscular volume; NT-pro-BNP: N-terminal pro-brain natriuretic peptide; RAA: right atrial area; CI: cardiac index; WHO class: WHO functional class; SO2: oxygen saturation, mRASP: modified risk assessment score of PAH; COMPERA: comparative, prospective registry of newly initiated therapies for pulmonary hypertension score; SPAHR: Swedish pulmonary arterial hypertension registry score; FPHR 3p: french pulmonary arterial hypertension registry score, 3 parameters; FPHR 4p: french pulmonary arterial hypertension registry score, 4 parameters.'), 
+           part = 'header', 
+           ref_symbols = 'a') %>% 
+  footnote(1, 4:5, 
+           value = as_paragraph('Numeric variables: Mann-Whitney U test with r effect size statistic; categorical variables: \u03C7\u00B2 test with Cramer V effect size statistic.'), 
+           part = 'header', 
+           ref_symbols = 'b') %>% 
+  theme_vanilla
+  
+```
+
+\newpage
+
+```{r tab-clust-LZ, tab.cap = 'Characteristic of the participant clusters in the Linz/Vienna cohort. Numeric variables are presented as medians with interquartile ranges (IQR) and ranges. Categorical variables are presented as percentages and counts within the complete observation set.'}
+
+suppl_tables$clust_LZ %>% 
+  flextable %>% 
+  width(1, width = 4.5, unit = 'cm') %>% 
+  width(2:3, width = 4.6, unit = 'cm') %>% 
+  width(4, width = 2.5, unit = 'cm') %>% 
+  width(5, width = 1.9, unit = 'cm') %>% 
+  footnote(1, 1, 
+           value = as_paragraph('SMWD: six-minute walking distance; mPAP: mean pulmonary arterial pressure; PVR: pulmonary vascular resistance; PCWP: pulmonary capillary wedge pressure; RDW: red blood cell distribution width; FT: ferritin; TF-Sat: transferrin saturation; MCV: mean corpuscular volume; NT-pro-BNP: N-terminal pro-brain natriuretic peptide; RAA: right atrial area; CI: cardiac index; WHO class: WHO functional class; SO2: oxygen saturation, mRASP: modified risk assessment score of PAH; COMPERA: comparative, prospective registry of newly initiated therapies for pulmonary hypertension score; SPAHR: Swedish pulmonary arterial hypertension registry score; FPHR 3p: french pulmonary arterial hypertension registry score, 3 parameters; FPHR 4p: french pulmonary arterial hypertension registry score, 4 parameters.'), 
+           part = 'header', 
+           ref_symbols = 'a') %>% 
+  footnote(1, 4:5, 
+           value = as_paragraph('Numeric variables: Mann-Whitney U test with r effect size statistic; categorical variables: \u03C7\u00B2 test with Cramer V effect size statistic.'), 
+           part = 'header', 
+           ref_symbols = 'b') %>% 
+  theme_vanilla
+  
+```
+
+\newpage
+
+# Supplementary Figures {#sec:figures}
+
+```{r fig-uni-cox, fig.width = figur::convert(suppl_figures$uni_cox, to = 'in')$w, fig.height = figur::convert(suppl_figures$uni_cox, to = 'in')$h, fig.cap = 'Univariable Cox proportional hazard modeling.'}
+
+suppl_figures$uni_cox$plot
+
+```
+
+__Supplementary Figure S\@ref(fig:fig-uni-cox). Univariable Cox proportional hazard modeling.__ 
+
+_Association of candidate risk factors (Supplementary Table S\@ref(tab:tab-study-vars)) with overall survival was investigated with a series of univariable Cox proportional hazard models. Numeric independent variables were normalized and median-centered and their first and second order terms included in the models. Hazard ratio (HR) estimate significance was determined by Wald Z test and adjusted for multiple testing with Benjamini-Hochberg method. HR values with 95$\%$ confidence intervals for variables significantly associated with the survival in at least one Innsbruck (IBK) or Linz/Vienna cohort (LZ/W) were presented in a Forest plot. Numbers of complete observations and mortality are indicated under the plot._
+_CI: cardiac index; MCV: mean corpuscular volume; mPAP: mean pulmonary arterial pressure; NT-pro-BNP: N terminal pro brain natriuretic peptide; PVR: pulmonary vascular resistance; RAA: right atrial area; SMWD: six minute walking distance._
+
+\newpage
+
+```{r fig-tool-correlation, fig.width = figur::convert(suppl_figures$tool_correlation, to = 'in')$w, fig.height = figur::convert(suppl_figures$tool_correlation, to = 'in')$h, fig.cap = 'Correlation of the Elastic Net score and established risk assessment scores.'}
+
+suppl_figures$tool_correlation$plot
+
+```
+
+__Supplementary Figure S\@ref(fig:fig-tool-correlation). Correlation of the Elastic Net score and established risk assessment scores.__ 
+
+_Established PAH risk scales (mRASP: modified risk assessment score of PAH; COMPERA: comparative, prospective registry of newly initiated therapies for pulmonary hypertension score; SPAHR: Swedish pulmonary arterial hypertension registry score; FPHR 3p: french pulmonary arterial hypertension registry score; FPHR 4p: french pulmonary arterial hypertension registry score, 4 parameters) were displayed in ordinal scales (mRASP, COMPERA, SPAHR: low: 1, intermediate [int]: 2, high risk: 3, FPHR scales: number of risk factors). Their correlation with the newly developed ELASTIC Net score was assessed by Spearman's test corrected for multiple testing with Benjamini-Hochberg method. Consistency of the entire risk assessment battery was investigated with Kendall's coefficient of concordance (KCC). Correlation coefficients $\rho$ are presented as points. Point size and color codes for the $\rho$ value. Points are labeled with their $\rho$ values. KCC values are displayed in the plot captions. _
+
+\newpage
+
+```{r fig-ensemble, fig.width = figur::convert(suppl_figures$ensemble, to = 'in')$w, fig.height = figur::convert(suppl_figures$ensemble, to = 'in')$h, fig.cap = 'Development of a LASSO ensemble model including the Elastic Net score and established PAH risk assessment tools.'}
+
+suppl_figures$ensemble$plot
+
+```
+
+__Supplementary Figure S\@ref(fig:fig-ensemble). Development of a LASSO ensemble model including the Elastic Net score and established PAH risk assessment tools.__ 
+
+_The LASSO Cox regression ensemble model was trained in the Innsbruck cohort (IBK) with the Elastic Net score and established PAH risk scales (mRASP: modified risk assessment score of PAH; COMPERA: comparative, prospective registry of newly initiated therapies for pulmonary hypertension score; SPAHR: Swedish pulmonary arterial hypertension registry score; FPHR 3p: french pulmonary arterial hypertension registry score; FPHR 4p: french pulmonary arterial hypertension registry score, 4 parameters) as explanatory variables. The Elastic Net score was expressed as a numeric variables, the other risk tools were included in the model as categorical variables (mRASP, COMPERA, SPAHR: low, intermediate [int], high risk: 3, FPHR scales: number of risk factors). Numbers of complete observations and mortality is indicated in B._
+
+_(A) Non-zero model coefficients represented as hazard ratios (HR). Plot points are labeled with their HR values._ 
+
+_(B) Association of overall survival with the LASSO ensemble linear prediction score in the training IBK and test Linz/Vienna (LZ/W) cohort was assessed by Kaplan-Meier analysis. Significance of the survival differences in the study participants stratified by the linear predictor score tertiles (T1: 0 - 33, T2: 34 - 66, T3: 66 - 100 percentile) was determined by log-rank test adjusted for multiple testing with Benjamini-Hochberg method. P values are shown in the plots, numbers of complete observations and mortality are indicated in the plot captions._
+
+\newpage
+
+```{r fig-cluster-qc, fig.width = figur::convert(suppl_figures$cluster_qc, to = 'in')$w, fig.height = figur::convert(suppl_figures$cluster_qc, to = 'in')$h, fig.cap = 'Development of the PAH clusters.'}
+
+suppl_figures$cluster_qc$plot
+
+```
+
+__Supplementary Figure S\@ref(fig:fig-cluster-qc). Development of the PAH clusters.__ 
+
+_Clustering of the training Innsbruck (IBK) cohort participants in respect to the survival-associated factors identified by elastic-net modeling (Figure 2A) was investigated by PAM (partitioning around medoids) algorithm and cosine distance measure._
+
+_(A) Comparison of the 'explained' clustering variance (ratio of between-cluster sum of squares to total sum of squares) and correct cluster assignment rate in 10-fold cross-validation (CV) for clustering of the IBK cohort with various algorithms (PAM, HCl: hierarchical clustering, k-means and SOM/HCl: combined self-organizing map/hierarchical clustering) and distance statistics (Euclidean, Manhattan and cosine distance) and cluster numbers k. Number of clusters k for each clustering procedure was determined by the bend of the curve of within-cluster sum of squares and maximal mean silhouette statistic. Algorithm, distance measure and the cluster number k are indicated in the Y axis. Note the superior 'explained' variance fraction and CV performance of the PAM algorithm/cosine distance procedure._
+
+_(B) Determination of the optimal cluster number for the PAM/cosine distance procedure by the bend of the total within-cluster sum of squares curve, peak of the mean silhouette statistic and correct cluster assignment rate in 10-fold CV. The dashed vertical line indicates the chosen number of PAM clusters._
+
+\newpage
+
+```{r fig-importance, fig.width = figur::convert(suppl_figures$importance, to = 'in')$w, fig.height = figur::convert(suppl_figures$importance, to = 'in')$h, fig.cap = 'Permutation importance of the variables used for development of the PAH clusters.'}
+
+suppl_figures$importance$plot
+
+```
+
+__Supplementary Figure S\@ref(fig:fig-importance). Permutation importance of the variables used for development of the PAH clusters.__ 
+
+_Importance of particular clustering factors was determined by comparing the fractions of 'explained' clustering variance (ratio of between-cluster sum of squares to total sum of squares) between the original clustering structure and clustering objects with randomly re-shuffled clustering variables in the Innsbruck (IBK) cohort. The procedure was repeated 100 times. Differences in explained clustering variances ($\delta$) are presented in violin plots. Values for single procedure repetitions are depicted as points._
+
+\newpage
+
+```{r fig-clust-diff, fig.width = figur::convert(suppl_figures$clust_diff, to = 'in')$w, fig.height = figur::convert(suppl_figures$clust_diff, to = 'in')$h, fig.cap = 'Differences in study variables between the PAH clusters.'}
+
+suppl_figures$clust_diff$plot
+
+```
+
+__Supplementary Figure S\@ref(fig:fig-clust-diff). Differences in study variables between the PAH clusters.__ 
+_Training Innsbruck (IBK) cohort participants were clustered as presented in Figure 4 and Supplementary Figure S\@ref(fig:fig-cluster-qc). Cluster assignment of the test Linz/Vienna (LZ/W) cohort participants was accomplished by k-nearest neighbor label propagation procedure. Differences in the study variables (Supplementary Table S\@ref(tab:tab-study-vars)) between the clusters were determined by Mann-Whitney test with r effect size statistic or by $\chi^2$ test with Cramer V effect size statistic for numeric and categorical features, respectively. P values were adjusted for multiple testing with Benjamini-Hochberg method (pFDR)._
+_Significance (pFDR) and effect size are presented in scatter plots. Each point represents one study parameter, parameters significantly different between the clusters are highlighted in red. Parameters found significant in both cohorts are labeled with their names. The significance cutoff is depicted as a dashed line. Numbers of participants assigned to the clusters are presented under the plots._
+_CI: cardiac index; mPAP: mean pulmonary arterial pressure; NT-pro-BNP: N terminal pro brain natriuretic peptide; PVR: pulmonary vascular resistance; RAA: right atrial area; SMWD: six minute walking distance; mPAP: mean pulmonary arterial pressure; RDW: red blood cell distribution width; mRAP: mean right atrial pressure; FPHR: French pulmonary hypertension register; SPAHR: Swedish pulmonary arterial hypertension register; COMPERA: comparative, prospective registry of newly initiated therapies for pulmonary hypertension; mRASP: modified risk assessment score of PAH._
+
+\newpage
+
+# References
