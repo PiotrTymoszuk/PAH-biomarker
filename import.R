@@ -9,6 +9,7 @@
   library(survival)
   library(soucer)
   library(figur)
+  library(trafo)
 
   source_all('./tools/project_tools.R', 
              message = TRUE, 
@@ -19,24 +20,31 @@
 # data containers -----
 
   pah_study <- list()
-  globals <- list()
 
 # reading the data exported from SPSS, creating a legend data set. German typeset recoding ----
   
   insert_msg('Reading the raw data')
 
-  pah_study$data_master <- read_excel('./input data/PAH_IbkandLinz_Wien_expforR_reveal.xlsx')
+  pah_study$data_master <- 
+    read_excel('./data/PAH_IbkandLinz_Wien_expforR_reveal.xlsx')
   
-  pah_study$legend <- read_excel('./input data/Legend.xlsx')
+  ## there are issues with age at the first consultation
+  
+  pah_study$legend <- 
+    read_excel('./data/Legend.xlsx')
   
 # adding the center information to the patient ID and timepoint -----
   
-  insert_msg('Updating patient ID and timepoint variables with center information')
+  insert_msg('Updating ID and timepoint variables with center information')
   
   pah_study$data_master <- pah_study$data_master %>% 
     mutate(ID = ifelse(center == 1, paste('IBK', ID, sep = '_'), 
-                       ifelse(center == 2, paste('LZ', ID, sep = '_'), paste('W', ID, sep = '_'))), 
-           timepoint = ifelse(center == 1, paste('IBK', timepoint, sep = '_'), paste('LZ', timepoint, sep = '_')), 
+                       ifelse(center == 2, 
+                              paste('LZ', ID, sep = '_'), 
+                              paste('W', ID, sep = '_'))), 
+           timepoint = ifelse(center == 1, 
+                              paste('IBK', timepoint, sep = '_'), 
+                              paste('LZ', timepoint, sep = '_')), 
            surv_months = Survival_time_from_FD_months)
   
 # determining mortality within the study time frame, 1-, 3- and 5-year mortality -----
@@ -46,10 +54,14 @@
   pah_study$data_master <- det_mortality(pah_study$data_master)
   
   pah_study$data_master <- pah_study$data_master %>% 
-    mutate(event1 = factor(ifelse(death_study == 1 & surv_months < 12, 'yes', 'no')), 
-           event3 = factor(ifelse(death_study == 1 & surv_months < 3 * 12, 'yes', 'no')), 
-           event5 = factor(ifelse(death_study == 1 & surv_months < 5 * 12, 'yes', 'no')), 
-           death_study_fct = factor(ifelse(death_study == 1, 'yes', 'no')))
+    mutate(event1 = factor(ifelse(death_study == 1 & surv_months < 12, 
+                                  'yes', 'no')), 
+           event3 = factor(ifelse(death_study == 1 & surv_months < 3 * 12, 
+                                  'yes', 'no')), 
+           event5 = factor(ifelse(death_study == 1 & surv_months < 5 * 12, 
+                                  'yes', 'no')), 
+           death_study_fct = factor(ifelse(death_study == 1, 
+                                           'yes', 'no')))
 
 # filtering out the CTEPH and the follow-ups, setting the variable format ----
   
@@ -158,73 +170,48 @@
     map(~.x[2:length(.x)]) %>% 
     set_names(pah_study$mod_variables$variable)
 
-# dividing the dataset into a list of datasets corresponding to the particular time points ----
+# recoding risk scales -------
+  
+  insert_msg('Recoding risk scales')
+  
+  pah_study$data_master <- pah_study$data_master %>% 
+    mutate(mRASP = car::recode(mRASP, 
+                               "0 = 'low'; 1 = 'int'; 2 = 'high'"), 
+           mRASP = factor(mRASP, 
+                          c('low', 'int', 'high')), 
+           Compera = car::recode(Compera, 
+                                 "1 = 'low'; 2 = 'int'; 3 = 'high'"), 
+           Compera = factor(Compera, 
+                            c('low', 'int', 'high')), 
+           SPAHR  = car::recode(SPAHR , 
+                                "1 = 'low'; 2 = 'int'; 3 = 'high'"), 
+           SPAHR  = factor(SPAHR , 
+                           c('low', 'int', 'high')), 
+           FRENCH3p = factor(FRENCH3p), 
+           FRENCH4p = factor(FRENCH4p), 
+           Reveal_lite2_3_cat  = car::recode(Reveal_lite2_3_cat , 
+                                             "1 = 'low'; 2 = 'int'; 3 = 'high'"), 
+           Reveal_lite2_3_cat  = factor(Reveal_lite2_3_cat , 
+                                        c('low', 'int', 'high')), 
+           Reveal2_risk_3_cat  = car::recode(Reveal2_risk_3_cat , 
+                                             "1 = 'low'; 2 = 'int'; 3 = 'high'"), 
+           Reveal2_risk_3_cat  = factor(Reveal2_risk_3_cat , 
+                                        c('low', 'int', 'high')))
+  
+# dividing the dataset into a list of datasets for to the particular time points ----
 
   insert_msg('Creating data sheets for each center')
   
   pah_study <- pah_study$data_master %>% 
-    dlply(.(timepoint), as_tibble) %>% 
+    blast(timepoint) %>% 
     c(pah_study, .)
 
 # some globals: color scales and plot labels ----
   
   insert_msg('Creating a list with plotting and modeling globals')
   
-  globals$pos_neg_scale <- c('negative' = 'steelblue', 
-                             'positive' = 'coral3', 
-                             'ns' = 'gray60')
-
-  globals$center_colors <- c(IBK_0 = 'coral2', 
-                             cv = 'darkorange4', 
-                             LZ_0 = 'lightskyblue3')
-  
-  globals$center_labs <- c(IBK_0 = 'IBK', 
-                           cv = 'CV IBK', 
-                           LZ_0 = 'LZ/W')
-  
-  globals$var_labs <- pah_study$mod_variables$label %>% 
-    set_names(pah_study$mod_variables$variable) %>% 
-    c(., c(Gendermale = 'Sex: male', 
-           percardial_effusionyes = 'Percardial\neffusion', 
-           mRASP = 'mRASP', 
-           Compera = 'Compera', 
-           SPAHR = 'SPAHR', 
-           FRENCH3p = 'FRENCH3p', 
-           FRENCH4p = 'FRENCH4p', 
-           Reveal_lite2_3_cat = 'Reveal Lite', 
-           Reveal2_risk_3_cat = 'Reveal 2.0'))
-
-  ## theme
-  
-  globals$common_text <- element_text(size = 8, face = 'plain', color = 'black')
-  
-  globals$common_margin <- ggplot2::margin(t = 4, l = 3, r = 2, unit = 'mm')
-  
-  globals$common_theme <- theme_classic() + theme(axis.text = globals$common_text, 
-                                                  axis.title = globals$common_text, 
-                                                  plot.title = element_text(size = 8, 
-                                                                            face = 'bold', 
-                                                                            color = 'black', 
-                                                                            hjust = 0), 
-                                                  plot.subtitle = globals$common_text, 
-                                                  plot.tag = element_text(size = 8, 
-                                                                          face = 'plain', 
-                                                                          color = 'black', 
-                                                                          hjust = 0), 
-                                                  plot.tag.position = 'bottom', 
-                                                  legend.text = globals$common_text, 
-                                                  legend.title = globals$common_text, 
-                                                  strip.text = globals$common_text,
-                                                  strip.background = element_rect(fill = 'gray95', color = 'gray80'), 
-                                                  plot.margin = globals$common_margin, 
-                                                  panel.grid.major = element_line(color = 'gray90'))
-  
-  ## cluster colors
-  
-  globals$cluster_colors <- c(`#1` = 'coral3', 
-                              `#2` = 'steelblue', 
-                              `#3` = 'gray60', 
-                              `#4` = 'darkolivegreen3')
+  source_all('./tools/project_globals.R', 
+             message = TRUE, crash = TRUE)
   
 # generating variable: level dictionary -----
   
@@ -233,8 +220,11 @@
     compact %>% 
     map2_dfr(., names(.), ~tibble(variable = .y, level = .x)) %>% 
     mutate(parameter = paste0(variable, level),
-           parameter = stri_replace(parameter, regex = '\u2264|\u2265', replacement = '='), 
-           var_label = translate_vars(variable), 
+           parameter = stri_replace(parameter, 
+                                    regex = '\u2264|\u2265', 
+                                    replacement = '='), 
+           var_label = exchange(variable, 
+                                dict = globals$var_labs), 
            param_label = paste(var_label, level, sep = ': '))
   
 # Data sets for IBK and LZ, first consultation with the modeling variables and complete cases only ----
@@ -254,7 +244,7 @@
   
 # creating a series of relevant survival objects: IBK timepoints 0 and 1 and Linz timepoint 0 ----
   
-  insert_msg('Generating a series of survival objects for the relevant timepoints and centers')
+  insert_msg('Survival objects for the relevant timepoints and centers')
   
   pah_study$surv_obj <- pah_study[c('IBK_0', 
                                     'LZ_0')] %>% 

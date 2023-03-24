@@ -99,47 +99,14 @@
     return(i)
     
   }
-  
-  min_max <- function(vector) {
-    
-    stopifnot(is.numeric(vector))
-    
-    rec_vector <- (vector - min(vector, na.rm = T))/(max(vector, na.rm = T) - min(vector, na.rm = T))
-    
-    return(rec_vector)
-    
-  }
-  
-  set_rownames <- function(inp_tbl, vector) {
-    
-    inp_tbl <- data.frame(inp_tbl)
-    
-    rownames(inp_tbl) <- vector
 
-    return(inp_tbl)    
-    
-  }
-  
-# variable translation -----
-  
-  translate_vars <- function(variable_vector, value = 'label', lexicon = pah_study$legend) {
-    
-    ## translates the variable vector into a vector of corresponding labels
-    
-    transl_vec <- lexicon[[value]] %>% 
-      set_names(lexicon[['variable']])
-    
-    transl_vec <- transl_vec[variable_vector]
-    
-    transl_vec[is.na(transl_vec)] <- ''
-    
-    return(transl_vec)
-    
-  }
-  
 # wrappers for Cox modeling and model validation -----
   
-  model_spline_cox <- function(data, event_variable, time_variable, indep_variable, sec_order = TRUE, ...) {
+  model_spline_cox <- function(data, 
+                               event_variable, 
+                               time_variable, 
+                               indep_variable, 
+                               sec_order = TRUE, ...) {
     
     ## model formula
     
@@ -172,7 +139,10 @@
     
     ## model
     
-    cox_call <- call2('coxph', formula = mod_form, data = data)
+    cox_call <- call2('coxph', 
+                      formula = mod_form, 
+                      data = data, 
+                      x = TRUE)
     
     cox_mod <- eval(cox_call)
     
@@ -197,7 +167,8 @@
              c_index = cox_stats$c_index, 
              c_lower_ci = cox_stats$lower_ci, 
              c_upper_ci = cox_stats$upper_ci, 
-             rsq_mev = cox_stats$raw_rsq)
+             rsq_mev = cox_stats$raw_rsq, 
+             ibs_model = cox_stats$ibs_model)
     
     cox_summary <- cox_summary[c('parameter', 
                                  'variable', 
@@ -214,7 +185,8 @@
                                  'aic', 
                                  'c_index', 
                                  'c_lower_ci', 
-                                 'c_upper_ci')]
+                                 'c_upper_ci', 
+                                 'ibs_model')]
     
     ## assumptions
     
@@ -241,7 +213,7 @@
                                cohort_var = 'cohort', 
                                p_value = 'p_adjusted', 
                                x_trans = 'log2', 
-                               show_label = T, 
+                               show_label = TRUE, 
                                plot_title = NULL, 
                                plot_subtitle = NULL, 
                                plot_tag = NULL, 
@@ -249,21 +221,26 @@
                                color_lab = 'Risk\ncorrelation', 
                                cutpoint = 1, 
                                signif_digits = 2, 
-                               facet = T) {
+                               facet = TRUE) {
     
     ## plots a two-cohort Forest plot
     
-    ## meta
+    ## meta ------
     
     grid_formula <- expr(!!ensym(variable) ~ !!ensym(cohort_var)) %>% 
       as.formula
     
-    ## plot
+    ## plot ------
     
     inp_tbl <- inp_tbl %>% 
-      mutate(axis_lab = ifelse(.data[[level]] %in% c('no', 'yes', '') | is.na(.data[[level]]), 
-                               translate_vars(.data[[variable]]), 
-                               paste(translate_vars(.data[[variable]]), .data[[level]], sep = ': ')), 
+      mutate(axis_lab = ifelse(.data[[level]] %in% c('no', 'yes', '') | 
+                                 is.na(.data[[level]]), 
+                               exchange(.data[[variable]], 
+                                        dict = globals$var_labs), 
+                               paste(exchange(.data[[variable]], 
+                                              dict = globals$var_labs), 
+                                     .data[[level]], 
+                                     sep = ': ')), 
              axis_lab = ifelse(order == 1 | is.na(order), axis_lab, paste0(axis_lab, '\u00B2')), 
              axis_lab = stri_replace(axis_lab, fixed = 'cm2', replacement = 'cm\u00B2'), 
              axis_lab = stri_replace(axis_lab, fixed = '=', replacement = '\u2265'), 
@@ -295,9 +272,12 @@
                          labels = globals$center_labs, 
                          name = 'Cohort') + 
       scale_x_continuous(trans = x_trans) + 
-      scale_color_manual(values = globals$pos_neg_scale, 
+      scale_color_manual(values = globals$pos_neg_scale,
+                         labels = c(negative = 'favorable', 
+                                    ns = 'ns', 
+                                    positive = 'unfavorable'), 
                          name = color_lab) + 
-      guides(shape = F) +
+      guides(shape = 'none') +
       globals$common_theme + 
       theme(axis.title.y = element_blank(), 
             panel.grid.major = element_line(color = 'gray90'), 
@@ -334,7 +314,6 @@
 
 # clustering graphics -----
   
-  
   plot_vio_panel <- function(clust_object, 
                              plot_title = NULL, 
                              plot_subtitle = NULL, 
@@ -359,7 +338,8 @@
       extract('assignment') %>% 
       set_names(c('ID', 'clust_id')) %>% 
       left_join(plotting_tbl, ., by = 'ID') %>% 
-      mutate(feature = translate_vars(feature))
+      mutate(feature = exchange(feature, 
+                                dict = globals$var_labs))
     
     ## n numbers, presented in the plot tag
     
@@ -401,6 +381,26 @@
     
   }
   
+# Common table format -------
+  
+  format_table <- function(data) {
+    
+    data %>% 
+      map_dfc(stri_replace, 
+              regex = '^Mean.*\\nMedian\\s{1}=\\s{1}', 
+              replacement = '') %>% 
+      map_dfr(stri_replace, 
+              regex = '\\nComplete.*$', 
+              replacement = '') %>% 
+      map_dfc(stri_replace, 
+              regex = '^no.*\\nyes:\\s{1}', 
+              replacement = '') %>% 
+      map_dfc(stri_replace, 
+              fixed = 'Range', 
+              replacement = 'range')
+    
+  }
+  
 # varia ------
   
   set_common_y <- function(plot_IBK, plot_LZ) {
@@ -424,11 +424,5 @@
       map(~.x + scale_y_continuous(limits = cmm_limits))
     
   }
-  
-  mm_inch <- function(input_mm) {
-    
-    return(0.0393700787 * input_mm)
-    
-  }
-  
+
 # END ----

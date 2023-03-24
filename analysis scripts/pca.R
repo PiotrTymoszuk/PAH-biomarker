@@ -14,8 +14,10 @@
   
   pca$analysis_tbl <- pah_study[c('IBK_0', 'LZ_0')] %>% 
     map(select, ID, all_of(pca$variables)) %>% 
-    map(~map_dfc(.x, function(var) if(is.factor(var)) as.numeric(var) else var)) %>% 
-    map(~map_dfc(.x, function(var) if(is.numeric(var)) scale(var, center = median(var), scale = TRUE)[, 1] else var)) %>% 
+    map(~map_dfc(.x, 
+                 function(var) if(is.factor(var)) as.numeric(var) else var)) %>% 
+    map(~map_dfc(.x, 
+                 function(var) if(is.numeric(var)) scale(var, center = median(var), scale = TRUE)[, 1] else var)) %>% 
     map(column_to_rownames, 'ID')
   
 # PCA dimension number ------
@@ -44,24 +46,28 @@
         red_fun = 'pca')
   
   pca$pca_obj$IBK_0$loadings <- pca$pca_obj$IBK_0$loadings %>% 
-    mutate(variable = translate_vars(variable))
+    mutate(variable = exchange(variable, 
+                               dict = pah_study$legend))
   
   pca$pca_obj$LZ_0$loadings <- pca$pca_obj$LZ_0$loadings %>% 
-    mutate(variable = translate_vars(variable))
+    mutate(variable = exchange(variable, 
+                               dict = pah_study$legend))
   
   ## Plots of PCA scores and loadings
   
-  pca$pca_score_plots <- list(x = pca$pca_obj,  
-                              point_color = globals$center_colors[c('IBK_0', 'LZ_0')]) %>% 
+  pca$pca_score_plots <- 
+    list(x = pca$pca_obj,  
+         point_color = globals$center_colors[c('IBK_0', 'LZ_0')]) %>% 
     pmap(plot, 
-        type = 'scores', 
-        cust_theme = globals$common_theme, 
-        plot_subtitle = 'PCA scores') %>% 
+         type = 'scores', 
+         cust_theme = globals$common_theme, 
+         plot_subtitle = 'PCA scores') %>% 
     map2(., globals$center_labs[c('IBK_0', 'LZ_0')], 
          ~.x + labs(title = .y))
   
-  pca$pca_loadings_plots <- list(x = pca$pca_obj,  
-                                 point_color = globals$center_colors[c('IBK_0', 'LZ_0')]) %>% 
+  pca$pca_loadings_plots <- 
+    list(x = pca$pca_obj,  
+         point_color = globals$center_colors[c('IBK_0', 'LZ_0')]) %>% 
     pmap(plot, 
          type = 'loadings', 
          cust_theme = globals$common_theme, 
@@ -83,12 +89,13 @@
   
   ## plot
   
-  pca$eigen_plot <- list(data = pca$eigen_length, 
-                         color = globals$center_colors[c('IBK_0', 'LZ_0')], 
-                         title = globals$center_labs[c('IBK_0', 'LZ_0')]) %>% 
-    pmap(function(data, color, title) ggplot(data, 
-                                             aes(x = vec_len, 
-                                                 y = reorder(variable, vec_len))) + 
+  pca$eigen_plot <-
+    list(data = pca$eigen_length, 
+         color = globals$center_colors[c('IBK_0', 'LZ_0')], 
+         title = globals$center_labs[c('IBK_0', 'LZ_0')]) %>% 
+    pmap(function(data, color, title) data %>% 
+           ggplot(aes(x = vec_len, 
+                      y = reorder(variable, vec_len))) + 
            geom_point(shape = 16, 
                       size = 2, 
                       color = color) + 
@@ -98,10 +105,32 @@
                 subtitle = 'Factor influence', 
                 x = 'Loadings vector length'))
   
-# Assesing the general clustering tendency of the raw data and PCA scores ----
+# UMAP -------
+  
+  insert_msg('UMAP')
+  
+  pca$umap_obj <- pca$analysis_tbl %>% 
+    map(reduce_data, 
+        distance_method = 'cosine',
+        red_fun = 'umap', 
+        kdim = 2)
+  
+  ## layout plots
+  
+  pca$umap_score_plots <- 
+    list(x = pca$umap_obj,  
+         point_color = globals$center_colors[c('IBK_0', 'LZ_0')]) %>% 
+    pmap(plot, 
+         type = 'scores', 
+         cust_theme = globals$common_theme, 
+         plot_subtitle = 'UMAP scores') %>% 
+    map2(., globals$center_labs[c('IBK_0', 'LZ_0')], 
+         ~.x + labs(title = .y))
+  
+# Assessing the general clustering tendency of the raw data and PCA scores ----
   
   insert_msg('Clustering tendency')
-  
+
   pca$clust_tendency_data <- pca$analysis_tbl %>% 
     map(get_clust_tendency, 
         n = 50, 
@@ -114,9 +143,13 @@
         n = 50, 
         seed = 1234)
   
+  pca$clust_tendency_umap <- pca$umap_obj %>% 
+    map(extract, 'scores') %>% 
+    map(column_to_rownames, 'observation') %>% 
+    map(get_clust_tendency, 
+        n = 50, 
+        seed = 1234)
+  
 # END ------
   
-  insert_msg()
-
-
-  
+  insert_tail()

@@ -1,9 +1,17 @@
-# Explorative data analysis and comparison of the study features between the cohorts
+# Explorative data analysis and comparison of the study features 
+# between the cohorts
+
+# tools -------
+
+  library(plyr)
+  library(tidyverse)
+  library(trafo)
+  library(soucer)
 
   library(exda)
-  library(soucer)
+  library(survival)
   library(survminer)
-  
+
 # container list ----
   
   data_ex <- list()
@@ -14,10 +22,12 @@
   
   ## a table with variable names and comparison types
   
-  data_ex$var_tbl <- tibble(variable = c(pah_study$mod_variables$variable, 
-                                         'event3', 'event5', 'death_study_fct', 
-                                         'surv_months', 
-                                         pah_study$comparators$variable[!stri_detect(pah_study$comparators$variable, fixed = 'Reveal')]))
+  data_ex$var_tbl <- 
+    tibble(variable = c(pah_study$mod_variables$variable, 
+                        'event3', 'event5', 'death_study_fct', 
+                        'surv_months', 
+                        pah_study$comparators$variable)) %>% 
+    filter(!stri_detect(variable, fixed = 'Reveal'))
   
   ## the analysis tables
   
@@ -32,7 +42,8 @@
 
   data_ex$numeric_variables <- data_ex$var_tbl$variable
   
-  data_ex$numeric_variables <- data_ex$analysis_tbl$IBK_0[data_ex$numeric_variables] %>% 
+  data_ex$numeric_variables <- 
+    data_ex$analysis_tbl$IBK_0[data_ex$numeric_variables] %>% 
     map_lgl(is.numeric) %>% 
     data_ex$var_tbl$variable[.]
   
@@ -43,10 +54,14 @@
                                   'numeric', 'factor'), 
            eff_size_type = ifelse(variable %in% data_ex$numeric_variables, 
                                   'wilcoxon_r', 'cramer_v'), 
-           plot_lab = paste(translate_vars(variable), 
-                            translate_vars(variable, 'unit'), 
+           plot_lab = paste(exchange(variable, 
+                                     dict = pah_study$legend), 
+                            exchange(variable, 
+                                     dict = pah_study$legend, 
+                                     value = 'unit'), 
                             sep = ', '), 
-           plot_lab = stri_replace(plot_lab, regex = '\\,\\s{1}$', replacement = ''))
+           plot_lab = stri_replace(plot_lab, regex = '\\,\\s{1}NA$', 
+                                   replacement = ''))
   
 # Normality and EOV (cohort comparison) of the numeric variables ------
   
@@ -85,26 +100,30 @@
   
   insert_msg('Testing for the differences between the cohorts')
   
-  data_ex$test_results <- compare_variables(data_ex$analysis_tbl$IBK_0, 
-                                            data_ex$analysis_tbl$LZ_0, 
-                                            variables = data_ex$var_tbl$variable, 
-                                            what = 'eff_size', 
-                                            types = data_ex$var_tbl$eff_size_type, 
-                                            ci = FALSE, 
-                                            pub_styled = TRUE, 
-                                            adj_method = 'BH')
+  data_ex$test_results <- 
+    compare_variables(data_ex$analysis_tbl$IBK_0, 
+                      data_ex$analysis_tbl$LZ_0, 
+                      variables = data_ex$var_tbl$variable, 
+                      what = 'eff_size', 
+                      types = data_ex$var_tbl$eff_size_type, 
+                      ci = FALSE, 
+                      pub_styled = TRUE, 
+                      adj_method = 'BH')
 
 # Violin plots of the numeric variables -----
   
   insert_msg('Violin plots with the numeric features')
   
-  data_ex$plots <- list(variable = data_ex$numeric_variables, 
-                        plot_title = translate_vars(data_ex$numeric_variables), 
-                        y_lab = translate_vars(data_ex$numeric_variables, 
-                                               value = 'plot_lab', 
-                                               lexicon = data_ex$var_tbl), 
-                        plot_subtitle = filter(data_ex$test_results, 
-                                               variable %in% data_ex$numeric_variables)$significance) %>% 
+  data_ex$plots <- 
+    list(variable = data_ex$numeric_variables, 
+         plot_title = exchange(data_ex$numeric_variables, 
+                               dict = pah_study$legend), 
+         y_lab = exchange(data_ex$numeric_variables, 
+                          dict = data_ex$var_tbl, 
+                          value = 'plot_lab'), 
+         plot_subtitle = filter(data_ex$test_results, 
+                                variable %in% data_ex$numeric_variables) %>% 
+           .$significance) %>% 
     pmap(plot_variable, 
          data_ex$analysis_tbl$IBK_0, 
          data_ex$analysis_tbl$LZ_0,
@@ -121,61 +140,52 @@
   
   ## survival stats
   
-  data_ex$surv_fits <- survfit(Surv(surv_months, death_study) ~ cohort, 
-                               data = data_ex$analysis_tbl %>% 
-                                 map2_dfr(., names(.), ~mutate(.x, cohort = .y)))
+  data_ex$surv_fits <- 
+    surv_fit(Surv(surv_months, death_study) ~ cohort, 
+             data = data_ex$analysis_tbl %>% 
+               compress(names_to = 'cohort'))
   
-  data_ex$surv_diffs <- survdiff(Surv(surv_months, death_study) ~ cohort, 
-                                 data = data_ex$analysis_tbl %>% 
-                                   map2_dfr(., names(.), ~mutate(.x, cohort = .y)), 
-                                 rho = 0)
-  
-  data_ex$surv_summary <- tibble(chisq = data_ex$surv_diffs$chisq, 
-                                 df = length(data_ex$surv_diffs$n) - 1) %>% 
-    mutate(p_value = 1 - pchisq(chisq, df), 
-           significance = ifelse(p_value < 0.05, 
-                                 paste('p =', signif(p_value, 2)), 
-                                 paste0('ns (p = ', signif(p_value,2), ')')))
-  
+  data_ex$surv_summary <- data_ex$surv_fits %>% 
+    surv_pvalue(method = 'survdiff') %>% 
+    mutate(significance = ifelse(pval < 0.05, 
+                                 paste('p =', signif(pval, 2)), 
+                                 paste0('ns (p = ', signif(pval, 2), ')')))
+
   ## n numbers
   
   data_ex$n_numbers <- data_ex$analysis_tbl %>% 
     map(count, death_study)
   
-  data_ex$n_tag <- paste0('\nIBK: total: n = ', sum(data_ex$n_numbers$IBK_0$n), 
-                          ', events: n = ', data_ex$n_numbers$IBK_0$n[2], 
-                          '\nLZ/W: total: n = ', sum(data_ex$n_numbers$LZ_0$n), 
-                          ', events: n = ', data_ex$n_numbers$LZ_0$n[2])
+  data_ex$n_tag <- 
+    paste0('\nIBK: total: n = ', sum(data_ex$n_numbers$IBK_0$n), 
+           ', events: n = ', data_ex$n_numbers$IBK_0$n[2], 
+           '\nLZ/W: total: n = ', sum(data_ex$n_numbers$LZ_0$n), 
+           ', events: n = ', data_ex$n_numbers$LZ_0$n[2])
   
   ## plotting
   
-  data_ex$surv_plot <- ggsurvplot(fit = data_ex$surv_fits, 
-                                  palette = unname(globals$center_colors[c('IBK_0', 'LZ_0')]), 
-                                  title = 'IBK and LZ/W survival differences', 
-                                  xlab = 'Overall survival, months', 
-                                  legend.title = '', 
-                                  legend.labs = unname(globals$center_labs[c('IBK_0', 'LZ_0')]), 
-                                  conf.int = TRUE, 
-                                  conf.int.alpha = 0.15, 
-                                  pval = signif(data_ex$surv_summary$p_value, 2), 
-                                  pval.size = 2.75)$plot + 
+  data_ex$surv_plot <- 
+    ggsurvplot(fit = data_ex$surv_fits, 
+               palette = unname(globals$center_colors[c('IBK_0', 'LZ_0')]), 
+               title = 'IBK and LZ/W survival differences', 
+               xlab = 'Overall survival, months', 
+               legend.title = '', 
+               legend.labs = unname(globals$center_labs[c('IBK_0', 'LZ_0')]), 
+               conf.int = TRUE, 
+               conf.int.alpha = 0.15, 
+               pval = data_ex$surv_summary$significance, 
+               pval.size = 2.75)$plot + 
     globals$common_theme + 
     labs(tag = data_ex$n_tag)
-  
   
 # Common result table -----
   
   insert_msg('Common result table')
   
-  data_ex$result_table <- left_join(data_ex$desc_stats, 
-                                    data_ex$test_results[c('variable', 'significance', 'eff_size')], 
-                                    by = 'variable') %>% 
-    map_dfc(stri_replace, regex = 'no:.*\\nyes:\\s{1}', replacement = '') %>% 
-    map_dfc(stri_replace, regex = '\\nComplete:.*$', replacement = '') %>% 
-    map_dfc(stri_replace, regex = 'Mean.*\\n', replacement = '') %>% 
-    map_dfc(stri_replace_all, fixed = '% (', replacement = '% (n = ') %>% 
-    map_dfc(stri_replace, fixed = 'Median =', replacement = 'median:') %>% 
-    map_dfc(stri_replace, fixed = 'Range', replacement = 'range')
+  data_ex$result_table <- 
+    left_join(data_ex$desc_stats, 
+              data_ex$test_results[c('variable', 'significance', 'eff_size')], 
+              by = 'variable')
   
   ## appending with the survival testign results (Mentel-Henszel test)
 

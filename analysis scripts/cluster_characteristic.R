@@ -6,59 +6,77 @@
   
   cl_chara <- list()
   
-# globals: analysis tables with the cluster assigment schemes ------
+# analysis tables ------
   
-  insert_msg('Analysis tables and variables')
+  insert_msg('Analysis tables')
   
   ## analysis tables
   
-  cl_chara$analysis_tbl <- clust[c('clust_obj_train', 
-                                   'clust_obj_test')] %>% 
+  cl_chara$analysis_tbl <- clust$clust_obj %>% 
     map(extract, 'assignment') %>% 
     map(set_names, c('ID', 'clust_id')) %>% 
-    map2(., pah_study[c('IBK_0', 'LZ_0')], left_join, by = 'ID') %>% 
-    set_names(c('IBK_0', 'LZ_0'))
-  
-  cl_chara$comparator_tbl <- pah_study$data_master %>% 
-    filter(timepoint %in% c('IBK_0', 'LZ_0')) %>% 
-    select(ID, all_of(pah_study$comparators$variable))
-  
-  cl_chara$analysis_tbl <- cl_chara$analysis_tbl %>% 
-    map(left_join, cl_chara$comparator_tbl, by = 'ID')
+    map2(., 
+         pah_study[c('IBK_0', 'LZ_0')], 
+         left_join, by = 'ID')
 
-  ## analysis responses
+  cl_chara$analysis_tbl <- 
+    map2(cl_chara$analysis_tbl, 
+         pah_study$data_master %>% 
+           blast(timepoint) %>% 
+           map(select, ID, all_of(pah_study$comparators$variable)), 
+         left_join, by = 'ID')
   
-  ## a table with variable names and comparison types
+  cl_chara$analysis_tbl$LZ_0 <- cl_chara$analysis_tbl$LZ_0 %>% 
+    select(- starts_with('Reveal'))
+
+# analysis variables --------
   
-  cl_chara$var_tbl <- tibble(variable = c(pah_study$mod_variables$variable, 
-                                         'event3', 'event5', 
-                                         filter(pah_study$comparators, 
-                                                !stri_detect(variable, fixed = 'Reveal'))$variable))
+  insert_msg('Analysis variables')
+
+  ## variable lexicons with variable names, labels, test and plot types
   
-  ## identifying the numeric features
+  cl_chara$var_tbl <- cl_chara$analysis_tbl %>% 
+    map(select, -ID, -clust_id, -death_study, -surv_months) %>% 
+    map(~tibble(variable = names(.x), 
+                factor = map_lgl(.x, is.factor))) %>% 
+    map(mutate, 
+        test_type = ifelse(factor, 'cramer_v', 'wilcoxon_r'), 
+        plot_type = ifelse(factor, 'stack', 'violin'))
   
-  cl_chara$numeric_variables <- cl_chara$var_tbl$variable
-  
-  cl_chara$numeric_variables <- cl_chara$analysis_tbl$IBK_0[cl_chara$numeric_variables] %>% 
-    map_lgl(is.numeric) %>% 
-    cl_chara$var_tbl$variable[.]
-  
-  ## a table with variable names and comparison types
+  ## variable labels
   
   cl_chara$var_tbl <- cl_chara$var_tbl %>% 
-    mutate(var_type = ifelse(variable %in% cl_chara$numeric_variables, 
-                             'numeric', 'factor'), 
-           eff_size_type = ifelse(variable %in% cl_chara$numeric_variables, 
-                                  'wilcoxon_r', 'cramer_v'), 
-           plot_lab = paste(translate_vars(variable), 
-                            translate_vars(variable, 'unit'), 
-                            sep = ', '), 
-           plot_lab = stri_replace(plot_lab, regex = '\\,\\s{1}$', replacement = ''))
+    map2(., c('IBK', 'LZ/W'), 
+         ~mutate(.x, 
+                 label = exchange(variable, 
+                                  dict = pah_study$legend), 
+                 plot_title = paste(label, .y, sep = ', '), 
+                 y_lab = ifelse(factor, 
+                                '% of cluster', 
+                                paste(label, 
+                                      exchange(variable,
+                                               dict = pah_study$legend, 
+                                               value = 'unit'), 
+                                      sep = ', ')), 
+                 tab_lab =  ifelse(factor, 
+                                   label, 
+                                   paste(label, 
+                                         exchange(variable,
+                                                  dict = pah_study$legend, 
+                                                  value = 'unit'), 
+                                         sep = ', '))))
   
-  ## n numbers
+  ## numeric variables: identical for both cohorts
   
-  cl_chara$n_numbers <- clust[c('clust_obj_train', 
-                                'clust_obj_test')] %>% 
+  cl_chara$numeric_variables <- cl_chara$var_tbl$IBK_0 %>% 
+    filter(!factor) %>% 
+    .$variable
+
+# N numbers -------
+  
+  insert_msg('Cluster N numbers')
+  
+  cl_chara$n_numbers <- clust$clust_obj %>% 
     map(ngroups)
   
   cl_chara$n_tags <- cl_chara$n_numbers  %>% 
@@ -69,6 +87,9 @@
 # Exploration: normality and EOV -----
   
   insert_msg('Normality and EOV')
+  
+  ## normality is violated seriously for multiple variables
+  ## statistical testing with Wilcoxon test!
   
   cl_chara$normality <- cl_chara$analysis_tbl %>% 
     map(~explore(.x, 
@@ -89,141 +110,144 @@
   
   insert_msg('Descriptive stats')
   
-  cl_chara$desc_stats <- cl_chara$analysis_tbl %>% 
-    map(~explore(.x, 
-                 split_factor = 'clust_id', 
-                 variables = cl_chara$var_tbl$variable, 
-                 what = 'table', 
-                 pub_styled = TRUE) %>% 
-          reduce(left_join, by = 'variable') %>% 
-          set_names(c('variable', 'clust_#1', 'clust_#2')))
-  
-  cl_chara$desc_stats <- map2(cl_chara$desc_stats, 
-                              cl_chara$n_numbers, 
-                              ~rbind(tibble(variable = 'n_number', 
-                                            `clust_#1` = .y$n[1], 
-                                            `clust_#2` = .y$n[2]), 
-                                     .x))
-    
+  cl_chara$desc_stats <- 
+    list(data = cl_chara$analysis_tbl, 
+         variables = map(cl_chara$var_tbl, ~.x$variable)) %>% 
+    pmap(explore, 
+         split_factor = 'clust_id', 
+         what = 'table', 
+         pub_styled = TRUE) %>% 
+    map(reduce, left_join, by = 'variable') %>% 
+    map(set_names, c('variable', 'clust_#1', 'clust_#2'))
+
 # Testing ------
   
   insert_msg('Testing')
   
-  cl_chara$test_results <- cl_chara$analysis_tbl %>% 
-    map(~compare_variables(.x, 
-                           split_factor = 'clust_id', 
-                           variables = cl_chara$var_tbl$variable, 
-                           what = 'eff_size', 
-                           types = cl_chara$var_tbl$eff_size_type, 
-                           pub_styled = TRUE, 
-                           ci = FALSE, 
-                           adj_method = 'BH'))
+  cl_chara$test <- 
+    list(x = cl_chara$analysis_tbl, 
+         y = map(cl_chara$var_tbl, ~.$variable), 
+         z = map(cl_chara$var_tbl, ~.x$test_type)) %>% 
+    pmap(function(x, y, z) x %>% 
+           compare_variables(split_factor = 'clust_id', 
+                             variables = y, 
+                             what = 'eff_size', 
+                             types = z, 
+                             pub_styled = TRUE, 
+                             ci = FALSE, 
+                             exact = FALSE, 
+                             adj_method = 'BH'))
   
+# Common significant differences between the clusters ------
+  
+  insert_msg('Common significant differences between the clusters')
+
+  cl_chara$cmm_significant <- cl_chara$test %>% 
+    map(filter, p_adjusted < 0.05) %>% 
+    map(~.x$variable) %>% 
+    reduce(intersect)
+    
 # Common result table -----
   
   insert_msg('Common result table')
   
-  cl_chara$result_tbl <- map2(cl_chara$desc_stats, 
-                              map(cl_chara$test_results, ~.x[c('variable', 'significance', 'eff_size')]), 
-                              left_join, by = 'variable')
+  cl_chara$result_tbl <- 
+    map2(cl_chara$desc_stats, 
+         map(cl_chara$test, 
+             ~.x[c('variable', 'significance', 'eff_size')]), 
+         left_join, by = 'variable') %>% 
+    map2(., cl_chara$var_tbl, 
+        ~mutate(.x, variable = exchange(variable, 
+                                        dict = .y, 
+                                        value = 'tab_lab')))
   
-  cl_chara$result_tbl <- cl_chara$result_tbl %>% 
-    map(~map_dfc(.x, stri_replace, regex = '\\nComplete:\\s{1}.*', replacement = '') %>% 
-          map_dfc(stri_replace, regex = '^no.*\\nyes:\\s{1}', replacement = '') %>% 
-          map_dfc(stri_replace, regex = 'Mean.*\\n', replacement = '') %>% 
-          map_dfc(stri_replace_all, fixed = '% (', replacement = '% (n = ') %>% 
-          map_dfc(stri_replace, fixed = 'Median =', replacement = 'median:') %>% 
-          map_dfc(stri_replace, fixed = 'Range', replacement = 'range'))
-  
-# Single plots of the numeric variables ------
-  
-  insert_msg('Single violin plots')
-  
-  cl_chara$plots <- cl_chara$analysis_tbl %>% 
-    map(function(cohort) list(variable = cl_chara$numeric_variables, 
-                              plot_title = translate_vars(cl_chara$numeric_variables), 
-                              y_lab = translate_vars(cl_chara$numeric_variables, 
-                                                     value = 'plot_lab', 
-                                                     lexicon = cl_chara$var_tbl)) %>% 
-          pmap(plot_variable, 
-               cohort, 
-               split_factor = 'clust_id', 
-               type = 'violin', 
-               x_lab = 'Cluster', 
-               cust_theme = globals$common_theme) %>%
-          set_names(cl_chara$numeric_variables)) %>% 
-    unlist(recursive = FALSE)
-  
-  ## adding the colors and p values in the sub-captions
-  
-  cl_chara$plot_caps <- cl_chara$test_results %>% 
-    map(filter, variable %in% cl_chara$numeric_variables) %>% 
-    map(~.x$significance) %>% 
-    reduce(c)
-  
-  cl_chara$plots <- map2(cl_chara$plots, 
-                         cl_chara$plot_caps, 
-                         ~.x + labs(subtitle = .y)) %>% 
-    map(~.x + scale_fill_manual(values = globals$cluster_colors, 
-                                name = 'Cluster'))
-  
+  cl_chara$result_tbl <- 
+    map2(cl_chara$result_tbl, 
+         cl_chara$n_numbers, 
+         ~full_rbind(tibble(variable = 'Participants, n', 
+                           `clust_#1` = .y$n[1], 
+                           `clust_#2` = .y$n[2]), 
+                     .x))
+
 # Summary scatter plot -----  
   
   insert_msg('Summary scatter plots')
   
-  ## plotting table
+  ## plotting object
   
-  cl_chara$test_plot <- cl_chara$analysis_tbl %>% 
-    map(~compare_variables(.x, 
-                           split_factor = 'clust_id', 
-                           variables = cl_chara$var_tbl$variable, 
-                           what = 'eff_size', 
-                           types = cl_chara$var_tbl$eff_size_type, 
-                           pub_styled = FALSE, 
-                           ci = FALSE, 
-                           adj_method = 'BH') %>% 
-          mutate(significant = ifelse(p_adjusted < 0.05, 'significant', 'ns'), 
-                 var_lab = translate_vars(variable)))
-  
-  ## common significant factors
-  
-  cl_chara$common_signif <- cl_chara$test_plot %>% 
-    map(filter, significant == 'significant') %>% 
-    map(~.x$variable) %>% 
-    reduce(intersect)
-  
-  cl_chara$test_plot <- cl_chara$test_plot %>% 
-    map(mutate, plot_lab = ifelse(variable %in% cl_chara$common_signif, var_lab, NA))
-  
+  cl_chara$test_obj <- 
+    list(x = cl_chara$analysis_tbl, 
+         y = map(cl_chara$var_tbl, ~.$variable), 
+         z = map(cl_chara$var_tbl, ~.x$test_type)) %>% 
+    pmap(function(x, y, z) x %>% 
+           compare_variables(split_factor = 'clust_id', 
+                             variables = y, 
+                             what = 'eff_size', 
+                             types = z, 
+                             pub_styled = FALSE, 
+                             ci = FALSE, 
+                             exact = FALSE, 
+                             adj_method = 'BH')) %>% 
+    map2(., cl_chara$var_tbl, 
+         ~mutate(.x, variable = exchange(variable, dict = .y)))
+
   ## plotting
   
-  cl_chara$summary_plots <- list(data = cl_chara$test_plot, 
-                                 title = globals$center_labs[c('IBK_0', 'LZ_0')], 
-                                 tag = cl_chara$n_tags) %>% 
-    pmap(function(data, title, tag) data %>% 
-           ggplot(aes(x = estimate, 
-                      y = -log10(p_adjusted), 
-                      fill = significant)) + 
+  cl_chara$summary_plots <- 
+    list(x = cl_chara$test_obj, 
+         plot_title = globals$center_labs[c('IBK_0', 'LZ_0')]) %>% 
+    pmap(plot, 
+         cust_theme = globals$common_theme, 
+         show_labels = 'none', 
+         point_alpha = 1) %>% 
+    map2(., cl_chara$n_tags, 
+         ~.x + 
            geom_hline(yintercept = -log10(0.05), 
-                      linetype = 'dashed') +  
-           geom_point(shape = 21, 
-                      size = 2, 
-                      alpha = 0.8, 
-                      position = position_jitter(width = 0.002, 
-                                                 height = 0.01, 
-                                                 seed = 1234)) + 
-           geom_text_repel(aes(label = plot_lab), 
-                           size = 2.75) + 
-           scale_fill_manual(values = c(ns = 'gray70', 
-                                        significant = 'coral3'), 
-                             name = '') + 
-           globals$common_theme + 
-           labs(title = title, 
+                      linetype = 'dashed') + 
+           labs(tag = .y, 
                 subtitle = 'Cluster comparison, Mann-Whitney or \u03C7\u00B2 test', 
-                tag = tag, 
                 x = 'Effect size, Wilcoxon r or Cramer V', 
                 y = expression('-log'[10]*' pFDR')))
+  
+  ## adding labels for common significant factors
+  
+  for(i in names(cl_chara$summary_plots)) {
+    
+    cl_chara$summary_plots[[i]]$data <- cl_chara$summary_plots[[i]]$data %>% 
+      mutate(plot_label = ifelse(variable %in% exchange(cl_chara$cmm_significant, 
+                                                        dict = cl_chara$var_tbl[[1]]), 
+                                 plot_label, NA))
+    
+  }
+  
+  cl_chara$summary_plots <- cl_chara$summary_plots %>% 
+    map(~.x + 
+          geom_text_repel(aes(label = plot_label), 
+                          size = 2.75))
 
+# Plots for single variables -------
+  
+  insert_msg('Plots for single variables')
+  
+  cl_chara$plots <- c(IBK_0 = 'IBK_0', 
+                      LZ_0 = 'LZ_0') %>% 
+    map(function(cohort) list(variable = cl_chara$var_tbl[[cohort]]$variable, 
+                              type = cl_chara$var_tbl[[cohort]]$plot_type, 
+                              plot_title = cl_chara$var_tbl[[cohort]]$plot_title, 
+                              y_lab = cl_chara$var_tbl[[cohort]]$y_lab, 
+                              plot_subtitle = cl_chara$test[[cohort]]$significance) %>% 
+          pmap(plot_variable, 
+               cl_chara$analysis_tbl[[cohort]], 
+               split_factor = 'clust_id', 
+               scale = 'percent', 
+               x_lab = 'PAH cluster', 
+               txt_size = 2.5, 
+               x_n_labs = TRUE, 
+               cust_theme = globals$common_theme) %>% 
+          set_names(cl_chara$var_tbl[[cohort]]$variable))
+  
 # END -----
   
+  rm(i)
+
   insert_tail()

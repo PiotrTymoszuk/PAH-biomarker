@@ -23,9 +23,7 @@
     map(count, death_study) %>% 
     map(~paste0('total: n = ', sum(.x$n), 
                 ', events: n = ', sum(.x$n[2])))  %>% 
-    map2_chr(c('IBK', 'LZ/W'), ., paste, sep = ': ') %>% 
-    paste(collapse = '\n') %>% 
-    paste0('\n', .)
+    map2_chr(c('IBK', 'LZ/W'), ., paste, sep = ': ')
   
 # serial modeling ------
   
@@ -61,15 +59,17 @@
   
   insert_msg('Forest plot')
   
-  uni_cox$forest_plot <- plot_summ_forest(inp_tbl = uni_cox$summary %>% 
-                                            reduce(rbind) %>% 
-                                            filter(variable %in% uni_cox$signif_fct), 
-                                          plot_title = 'Univariable modeling', 
-                                          plot_subtitle = 'Cox proportional hazard model', 
-                                          x_lab = 'HR, median-centered', 
-                                          x_trans = 'log2', 
-                                          plot_tag = uni_cox$n_numbers)
+  uni_cox$forest_plot <- 
+    plot_summ_forest(inp_tbl = uni_cox$summary %>% 
+                       reduce(rbind) %>% 
+                       filter(variable %in% uni_cox$signif_fct), 
+                     plot_title = 'Univariable modeling', 
+                     plot_subtitle = paste(uni_cox$n_numbers, 
+                                           collapse = '; '), 
+                     x_lab = 'HR, median-centered', 
+                     x_trans = 'log2', 
+                     color_lab = '')
   
 # END ----
   
-  insert_msg()
+  insert_tail()

@@ -1,5 +1,7 @@
 # Generates paper tables and figures
 
+# tools --------
+
   library(knitr)
   library(rmarkdown)
   library(bookdown)
@@ -18,9 +20,11 @@
   
   insert_msg('Sourcing the paper scripts')
   
-  source_all(c('./paper scripts/paper_tables.R', 
-               './paper scripts/paper_figures.R', 
-               './paper scripts/deploy_paper.R'), 
+  source_all(c('./paper scripts/tables.R', 
+               './paper scripts/figures.R',
+               './paper scripts/biblio.R', 
+               './paper scripts/links.R', 
+               './paper scripts/render.R'), 
              message = TRUE, crash = TRUE)
   
 # END -----
