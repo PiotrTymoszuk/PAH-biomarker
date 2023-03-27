@@ -1,6 +1,6 @@
 ---
 title: "The Combination of Supervised and Unsupervised Learning based Risk Stratification and Phenotyping in Pulmonary Arterial Hypertension - a Long-term Retrospective Multicenter Trial"
-subtitle: "Figures for Reviewers"
+subtitle: "PULM-D-22-00488, point-to-point reply"
 author: "Innsbruck PAH registry"
 date: "`r format(Sys.time(), '%Y-%m-%d')`"
 
@@ -9,7 +9,7 @@ output:
     reference_docx: ms_template.docx
     
 bibliography: pah_biblio.bib
-csl: JGIM.csl
+csl: bmc.csl
 
 header-includes:
   \usepackage{longtable}
@@ -37,13 +37,200 @@ library(bookdown)
 knitr::opts_chunk$set(echo = FALSE, 
                       warning = FALSE, 
                       message = FALSE, 
-                      dev = "cairo_pdf")
+                      dev = "png", 
+                      dpi = 600)
 
 flextable::set_flextable_defaults(font.family = 'Cambria', 
                                   font.size = 10)
 
 
 ```
+
+\newpage
+
+# Editor
+
+We would like to thank the Editor and Team of BMC Pulmonary Medicine for excellent editorial work. Independently of the Relievers' Issues, we have introduced few minor changes to the R pipeline and the manuscript to accommodate the latest versions of analysis software and improve the readability.
+
+* The R code analysis pipeline was available at https://github.com/PiotrTymoszuk/PAH-biomarker was adopted for the R version 4.2.3 and the latest versions of analysis packages. This had not effect on analysis results.
+
+* The manuscript text was shortened, e.g. by removal of phrases wording and suppression of suggestive wording ('notably', 'importantly') to accommodate changes requested be the Reviewers.
+
+* __Figure 2A__: variables of the Elastic Net signature were ordered by the HR values.
+
+* __Figure 2B__: the Kaplan Meier plots depicting the actual and fitted survival curves were removed since we considered them not particularly informative. In the revised manuscript, we present Kaplan Meier survival curves for tertiles of the Elastic Net signature at this place, which, we feel are more important for visual interpretation of the modeling results. Extensive numeric characteristic of goodness-of-fit of the Elastic Net model and the established risk assessment tools is presented now in __Supplementary Table S4__. 
+
+* __Figure 4B__: in the revised manuscript, violin plots of the clustering factors are appended with p values for differences between the clusters. We consider this solution helpful for instant interpretation of differences between the clusters.
+
+* __Supplementary Figure S5__: newer versions of our standard clustering tool, the development package [_clustTools_](https://github.com/PiotrTymoszuk/clustTools), allow now for robust testing of permutation importance of clustering factors for multiple random re-shuffles. For this reason, we analyzed clustering factor importance for n = 100 random runs. This approach is considered to improve reproducibility.
+
+* __Supplementary Tables__: we have reduced the number of footnotes and repeated wording 'median' and 'range'. We describe instead the format of variables in the table captions.
+
+*__Supplementary Methods__: were adapted to the changes in R markup. We also include few more details on R functions used in data analysis, in line with our recent publications.
+
+\newpage
+
+# Reviewer 1
+
+We would like to thank the Reviewer for careful lecture and valuable feedback.
+
+## Issue 1
+
+Considering that cluster analysis is a kind of unsupervised learning in machine learning, the title of the paper is suggested to be "The Combination of Supervised and Unsupervised Learning based Risk Stratification and Phenotyping in Pulmonary Arterial Hypertension - a Long-term Retrospective Multicenter Trial". 
+Additionally, in this paper, "PAM algorithm and cluster analysis" is used instead of "machine learning and cluster analysis".
+
+## Response 1
+
+We thank the Reviewer for the notion and adapted the title as suggested. 
+Given the plethora of machine learning algorithms we now describe more precisely the key methods as 'Elastic Net modeling/regression' or 'PAM clustering' throughout the text and suppressed the use of the general term 'machine learning'.
+
+## Issue 2
+
+When increasing data and index, or applying another cluster method, are these two clusters still suitable? Maybe there are three clusters consistent with the three risk levels of PAH (low, medium and high)?
+
+## Response 2
+
+We are grateful for this interesting point. 
+Our intention behind the clustering analysis was identification of clinically interesting risk patterns based on factors found to be associated with overall survival in Elastic Net regression rather than recapitulation of the ‘lo/intermediate/high’ risk classification scheme followed by most PAH risk scales. 
+
+To clarify the cluster number issue, we present now the optimal cluster number based on the bend of WSS curve (within-cluster sum of squares) and maximum of mean silhouette statistic for each of the algorithms compared with the PAM/cosine procedure in __Supplementary Figure S4A__. 
+Interestingly, the PAM/cosine algorithm was found more stable (10-fold cross-validation) [@Lange2004] and more informative (explained clustering variance) than its hierarchical clustering or k-means competitors with k = 3 clusters. 
+Concerning the algorithm of choice, the solution with k = 2 clusters was found optimal as investigated with three independent methods: the WSS curve, silhouette statistic [@Rousseeuw1987] and cross-validation [@Lange2004] (__Supplementary Figure S4B__). 
+In addition, a visual inspection of UMAP layouts [@Konopka2022; @McInnes2018] which we present in the revised manuscript instead of PCA scores speaks for two clearly separated clusters in each of the cohorts (__Figure 4A__).
+Following the Reviewer’s suggestion, we have investigated a larger pooled data set with the pooled Innsbruck and Linz/Vienna cohorts. 
+As presented in __Reviewer Figure S\@ref(fig:fig-pool-clust)__, the two cluster PAM/cosine distance algorithm was found again the most stable (accuracy = 0.95) and acceptably informative (explained variance = 0.45) clustering solution.
+Collectively, we are pretty confident that the study participants can be reproducibly assigned to two subsets based on age, SMWD, RDW, cardiac index, PVR, NT-pro-BNP and RAA. 
+Whether this classification applies to other larger cohorts, remains to be investigated. 
+We discuss the results of comparison of clustering algorithms and the extended cluster number finding in __Results__ of the revised manuscript.
+
+\newpage
+
+# Reviewer 2
+
+We thank the Reviewer for the thorough inspection of the manuscript and the feedback.
+
+## Issue 3
+
+In this manuscript, Sonnweber and colleagues present an analysis of prognostic indicators in pulmonary arterial hypertension (PAH) patients from 3 cohorts, grouped into two analyses. 
+They use machine learning and clustering of 19 established clinical/hospital laboratory values to build a model containing age, six-minute walking distance, red blood cell distribution width, cardiac index, pulmonary vascular resistance, N-terminal pro-brain natriuretic peptide and right atrial area. 
+None of these are surprising variables although RDW is often overlooked. 
+This model is validated in the second analysis of Linz/Vienna patients. 
+The clustering defines two clusters, one higher risk and older and the other with typical lower risk profiles. 
+The clusters are also associated with established clinical risk scores, which include some of the same variables. 
+The study is a proof of concept rather than definitive in of itself and provides an example of how these methods could be used with richer datasets, for example proteomics, as suggested by the authors.
+
+## Response 3
+
+As outlined by the reviewer, the presented analysis, which includes 183 PAH patients, presents a proof of concept analysis and further evaluation in larger cohorts is warranted. 
+One aim of the study was to test applicability of established machine learning algorithms like Elastic Net regression [@Simon2011a] or unsupervised clustering [@Schubert2019] in development of efficient and reproducible risk models. 
+We herein focused on currently broadly available parameters for PAH risk assessment and their highly predictive combinations, rather than on identification of entirely novel risk factors. 
+We totally agree with the reviewer that several other parameters (including serum markers of inflammation or vascular damage) [@Kanwar2020] may improve the accuracy of survival prediction in PAH and may be an included in our risk modeling approach in the future. 
+Intriguingly, to date only a few of the known risk factors for PAH mortality are available in clinical PAH registers and even fewer are used in clinical practice. 
+Accordingly, the use of complex PAH risk scores, such as the 14-parameter REVEAL 2.0 [@Benza2019], demonstrate a good predictive performance but are challenged by a resource-consuming process with limits their applicability in clinical practice.
+Thus, the herein presented risk assessment approach aims to identify the most robust, reproducible and easily applicable risk parameter combination, the Elastic Net signature, including currently available risk markers. 
+Whereas this approach deliberately lacks the novelty of new risk parameters, it may provide an easy path to improve PAH risk assessment in clinical practice without the need to spend significant additional resources. 
+In line with the comments of Reviewers 2 and 3, we extended Discussion of the revised manuscript, which now stresses the aim of the study more clearly and highlights the usefulness of new additional parameters for PAH risk assessment. 
+
+## Issue 4
+
+There is no attempt to demonstrate that the model/clusters derived add anything in terms of performance to established measures/models for example the risk equations/models mentioned, in a head-to-head or combinatorial model. 
+Again, as the authors state, this is a proof-of-concept rather than a novel model with suggested utility.
+
+## Response 4
+
+This is an interesting point. 
+Intriguingly, in the newly developed Elastic Net signature correlated with risk classification by established tools (mRASP, COMPERA, SPAHR, FPHR 3p and FPHR 4p) to a lesser extent (Spearman’s rho: 0.57 – 0.79) than the established risk scales with each other (rho: 0.61 – 0.9) (__Supplementary Figure S2__). 
+This may indicate that the Elastic Net model may indeed ‘cover’ patient subsets misclassified by the existing risk assessment tools. 
+
+In the revised manuscript, we have compared performance of the newly developed Elastic Net signature with the established risk assessment tools: mRASP, COMPERA, SPAHR, FPHR 3p and FPHR 4p. 
+Additionally, we have developed an ensemble survival model with the Ridge Cox regression procedure [@Simon2011a] employing the established risk assessment tools as explanatory variables. 
+Of note, high risk strata classification with SPAHR and mRASP were the strongest unfavorable covariates of the ensemble model (__Supplementary Figure S3A__).
+
+Performance of those models was compared with three metrics: 
+Harrell’s concordance index (C) [@Harrell1996], 
+R2 [@Dardis2022] and 
+integrated Brier score [@Graf1999. 
+As shown in __Figure 3__ and __Supplementary Table S4__, the Elastic Net signature outcompeted all established comparator risk assessment tools in terms of goodness-of-fit (C, IBS) and explained variance ($R^2$). 
+The ensemble of those popular risk assessment scales and the Elastic Net signature had comparable survival prediction performance in the IBK cohort, but the ensemble model performed poorly in the validation LZ/W collective. 
+This indicates that an optimal combination of easily available prognostic factors may measurably improve the death risk estimation. 
+Following the Reviewer’s suggestion, we present and discuss the comparison results in the revised manuscript.
+
+Finally, we constructed another ensemble of the mRASP, COMPERA, SPAHR, FPHR 3p and FPHR 4p in the Innsbruck cohort with the Survival Random Forest algorithm which is assumed to handle highly inter-correlated explanatory factors and interactions between explanatory factors more robustly than regression methods [@Ishwaran2008; @Breiman2001]. 
+Interestingly, such procedure generated a model which relied on three-parameter FPHR, mRASP and COMPERA to the highest extent (__Figure \@ref(fig:fig-rf-ensemble)__). 
+Interestingly, prediction accuracy of this more sophisticated tool was still worse than of the Elastic Net model. 
+Collectively, the data for established PAH risk assessment tools and their ensembles show their performance limits and underline the need for novel statistical approaches to modeling survival in PAH.
+
+## Issue 5
+
+In methods, median centering and "To account for non-linear associations of numeric independent variables, both first and second-order terms were included in the model" is repeated, and can be simplified.
+
+## Response 5
+
+We thank the Reviewer for the suggestion and adapted __Methods__ of the revised manuscript. 
+In addition, we redacted the revised text and removed repeated phrases for the sake of readability.
+
+\newpage
+
+## Issue 6
+
+To include n = 8 CTD-PAH patients in a paper of n~200 patients seems unnecessary/underpowered to assess potential differential effects/utility.
+
+## Response 6
+
+We agree with the reviewer that the CTD-PAH group is not large enough for subgroup analysis. 
+Still, risk assessment is well established for CTD-PAH, thus we think it is appropriate to include CTD-PAH in a PAH risk assessment evaluation.
+
+## Issue 7
+
+RDW has been previously identified as a good prognostic marker in PAH but this is not clear in the discussion e.g. Heart. 2011 Jul;97(13):1054-60. doi: 10.1136/hrt.2011.224857.
+
+## Response 7
+
+We thank the reviewer for this notion and included a statement and the reference [@Rhodes2011a] in __Discussion__ of the manuscript.
+
+## Issue 8
+
+Fig 1 - LZ/W says parameter missing n = 30 but only 12 lost?
+
+## Response 8
+
+We apologize for the typo in __Figure 1__ and thank the Reviewer for careful lecture. 
+The number of participants excluded due to data missingness (n = 30) is correct, but the final number was wrong. 
+The final size of Linz/Vienna cohort is n = 83 as reported in the text. 
+__Figure 1__ was corrected accordingly.
+
+## Issue 9
+
+Some parts of the supplemental tables are hard to read because the words median/IQR/range are repeated so much - it would be easier if the data were shown on their own, structured in a clear way such that they didn't need to be re-labeled on each line.
+
+## Response 10
+
+We thank the Reviewer for the feedback. 
+In the revised __Supplementary Material__, we have paid particular attention to readability of Supplementary Tables. 
+As suggested, we removed the repeated wording ‘median’ and ‘range’ and describe instead the format of numeric and categorical variables in table captions. 
+Additionally, we have compacted table footnotes and included in __Supplementary Table S1__ only variables used in the data analysis. 
+Independently of Reviewer’s suggestions, we adapted the analysis pipeline to the latest version of R (4.2.3) and R packages used for data transformation and analysis. 
+This had no effect on the analysis results, but shortened and improved readability of the R markup. 
+We introduced also minor changes to manuscript Figures such as arranging of HR values in __Figure 2A__ or displaying of p values in the plot axis in __Figure 4B__, which, in our opinion, will aid result interpretation.
+
+# Reviewer 3
+
+We thank the Reviewer for the careful lecture and feedback.
+
+## Issue 11
+
+In this retrospective, multicenter, observational two-cohort study, 183 PAH patients were analyzed.
+It has been shown that seven parameters, including age, six-minute walking distance, red blood cell distribution width, cardiac index, pulmonary vascular resistance, N-terminal pro-brain natriuretic peptide, and right atrial area, determine mortality. 
+It was concluded that machine learning and clustering algorithms are important tools for automatic mortality risk estimation.
+With this machine learning strategy, only the potential benefit of red blood cell distribution width has been mentioned. 
+However, factors contributing to unfavorable prognosis such as advanced age at the time of diagnosis, poor cardiac output, high pulmonary vascular resistance, poor six-minute walk test performance have not been adequately discussed. 
+The results of the study will contribute to the literature. 
+If the discussion is expanded in an appropriate manner, it may be published.
+
+## Response 11
+
+We agree with the Reviewer that the manuscript can be improved by expanding __Discussion__ as suggested. 
+Thus, we included a new paragraph, which addresses the role of unfavorable parameters for PAH mortality risk.
 
 \newpage
 
@@ -55,7 +242,7 @@ rev_figures$pool_clust$plot
 
 ```
 
-__Figure \@ref(fig:fig-pool-clust). Clustering analysis with the pooled IBK and LZ/W data set.__ 
+__Reviewer Figure R\@ref(fig:fig-pool-clust). Clustering analysis with the pooled IBK and LZ/W data set.__ 
 
 _Clustering of the pooled data set with participants of the Innsbruck (IBK) and Linz/Vienna cohorts in respect to the survival-associated factors identified by elastic-net modeling (Figure 2A) was investigated by several algorithms (PAM: partitioning around medoids, HCl: hierarchical clustering, k-MEANS and SOM/HCl: combined self-organizing map/hierarchical clustering). The optimal cluster number k was determined by analysis of the curve of within-cluster sum of squares and maximal silhouette statistic. Explanatory performance of the algorithms was assessed by the fraction of 'explained' clustering variance (ratio of between-cluster sum of squares to total sum of squares) and correct cluster assignment rate in 10-fold cross-validation (CV). Statistic values are presented in bar plots. Algorithm, distance metric and k number of clusters are indicated in the Y axis._
 
@@ -67,10 +254,12 @@ rev_figures$rf_ensemble$plot
 
 ```
 
-__Figure \@ref(fig:fig-rf-ensemble). Development of a Random Forest ensemble of PAH risk assessment tools and its performance at predicting overall survival.__ 
+__Reviewer Figure R\@ref(fig:fig-rf-ensemble). Development of a Random Forest ensemble of PAH risk assessment tools and its performance at predicting overall survival.__ 
 
-_Elastic Net score was developed as presented in Figure 2. The ensemble models of the Elastic Net score and established PAH risk assessment tools (FPHR 3p: French Pulmonary Hypertension Registry 3 parameter score, FPHR 4p: French Pulmonary Hypertension Registry 4 parameter score, COMPERA: Comparative, Prospective Registry of Newly Initiated Therapies for Pulmonary Hypertension score, mRASP: modified Risk Assessment Score of PAH.) was established with the LASSO Cox regression (Supplementary Figure S3) and survival Random Forest algorithms (number of trees: `r rf_tools$rf_models$IBK_0$ntree`, mtry = `r rf_tools$rf_models$IBK_0$mtry`, splitting rule: `r rf_tools$rf_models$IBK_0$splitrule`, minimal node size: `r rf_tools$rf_models$IBK_0$nodesize`)._
+_Elastic Net signature was developed as presented in Figure 2. The ensemble models of the Elastic Net score and established PAH risk assessment tools (FPHR 3p: French Pulmonary Hypertension Registry 3 parameter score, FPHR 4p: French Pulmonary Hypertension Registry 4 parameter score, COMPERA: Comparative, Prospective Registry of Newly Initiated Therapies for Pulmonary Hypertension score, mRASP: modified Risk Assessment Score of PAH.) was established with the LASSO Cox regression (Supplementary Figure S3) and survival Random Forest algorithms (number of trees: `r rf_tools$rf_models$IBK_0$ntree`, mtry = `r rf_tools$rf_models$IBK_0$mtry`, splitting rule: `r rf_tools$rf_models$IBK_0$splitrule`, minimal node size: `r rf_tools$rf_models$IBK_0$nodesize`)._
 
 _(A) Permutation importance of explanatory variables of the RF ensemble model._
 
-_(B) Predictive performance of the Elastic Net score, LASSO ensemble, Random Forest (RF) ensemble and single PAH risk scores at predicting overall survival was assessed by concordance index (C-index) and integrated Brier score (IBS). C-indexes and IBS for the risk assessment tools in the Innsbruck (IBK) and Linz/Vienna (LZ/W) cohorts are displayed in scatter plots._
+_(B) Predictive performance of the Elastic Net signature, LASSO ensemble, Random Forest (RF) ensemble and single PAH risk scores at predicting overall survival was assessed by concordance index (C-index) and integrated Brier score (IBS). C-indexes and IBS for the risk assessment tools in the Innsbruck (IBK) and Linz/Vienna (LZ/W) cohorts are displayed in scatter plots._
+
+# References

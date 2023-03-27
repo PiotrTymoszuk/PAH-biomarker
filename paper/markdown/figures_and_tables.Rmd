@@ -9,7 +9,7 @@ output:
     reference_docx: ms_template.docx
     
 bibliography: pah_biblio.bib
-csl: JGIM.csl
+csl: bmc.csl
 
 header-includes:
   \usepackage{longtable}
@@ -37,7 +37,8 @@ library(bookdown)
 knitr::opts_chunk$set(echo = FALSE, 
                       warning = FALSE, 
                       message = FALSE, 
-                      dev = "cairo_pdf")
+                      dev = "png", 
+                      dpi = 600)
 
 flextable::set_flextable_defaults(font.family = 'Cambria', 
                                   font.size = 10)
@@ -94,7 +95,7 @@ __Figure \@ref(fig:fig-elanet). Multi-parameter modeling of PAH survival with El
 
 _The Elastic Net multi-parameter Cox regression model with the set of `r nrow(pah_study$mod_variables)` (Supplementary Table S1) independent variables and overall survival as a response was developed in the training Innsbruck cohort. Numeric independent variables were median centered and their first and second order terms included in the model. Numbers of complete observations and mortality is indicated in B._
 
-_(A) Non-zero model coefficients represented as hazard ratios (HR). Plot points are labeled with their HR values._ 
+_(A) Non-zero Elastic Net model coefficients (Elastic Net signature) represented as hazard ratios (HR). Plot points are labeled with their HR values._ 
 
 _(B) Association of overall survival with the Elastic Net model linear prediction score in the training IBK and test Linz/Vienna (LZ/W) cohort was assessed by Kaplan-Meier analysis. Significance of the survival differences in the study participants stratified by the linear predictor score tertiles (T1: 0 - 33, T2: 34 - 66, T3: 66 - 100 percentile) was determined by log-rank test adjusted for multiple testing with Benjamini-Hochberg method. P values are shown in the plots, numbers of complete observations and mortality are indicated in the plot captions._
 
@@ -108,7 +109,7 @@ paper_figures$risk_tools$plot
 
 __Figure \@ref(fig:fig-risk-tools). Performance of PAH risk assessment tools.__ 
 
-_The Elastic Net score was developed as presented in Figure \@ref(fig:fig-elanet). The ensemble of Elastic Net score and established risk assessment tools (FPHR 3p: French Pulmonary Hypertension Registry 3 parameter score, FPHR 4p: French Pulmonary Hypertension Registry 4 parameter score, COMPERA: Comparative, Prospective Registry of Newly Initiated Therapies for Pulmonary Hypertension score, mRASP: modified Risk Assessment Score of PAH) was developed by LASSO Cox regression as presented in Supplementary Figure S3. Predictive performance of the Elastic Net score, ensemble and single PAH risk scores at predicting overall survival was assessed by concordance index (C-index) and integrated Brier score (IBS). C-indexes and IBS for the risk assessment tools in the Innsbruck (IBK) and Linz/Vienna (LZ/W) cohorts are displayed in scatter plots._
+_The Elastic Net signature was developed as presented in Figure \@ref(fig:fig-elanet). The ensemble of the established risk assessment tools (FPHR 3p: French Pulmonary Hypertension Registry 3 parameter score, FPHR 4p: French Pulmonary Hypertension Registry 4 parameter score, COMPERA: Comparative, Prospective Registry of Newly Initiated Therapies for Pulmonary Hypertension score, mRASP: modified Risk Assessment Score of PAH) was developed by Ridge Cox regression as presented in Supplementary Figure S3. Predictive performance of the Elastic Net signature, ensemble and single PAH risk scores at predicting overall survival was assessed by concordance index (C-index) and integrated Brier score (IBS). C-indexes and IBS for the risk assessment tools in the Innsbruck (IBK) and Linz/Vienna (LZ/W) cohorts are displayed in scatter plots, point size and color codes for $R^2$._
 
 \newpage
 
