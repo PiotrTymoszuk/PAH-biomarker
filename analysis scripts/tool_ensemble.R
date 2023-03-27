@@ -20,9 +20,7 @@
   ## analysis variables
   
   rf_tools$var_lexicon <- 
-    rbind(tibble(variable = 'score', 
-                 label = 'ElasticNet'), 
-          pah_study$comparators[c('variable', 'label')]) %>% 
+    pah_study$comparators[c('variable', 'label')] %>% 
     filter(!stri_detect(variable, fixed = 'Reveal'))
   
   ## analysis tables: the established risk scales are treated as factors
@@ -36,7 +34,7 @@
          left_join, by = 'ID') %>% 
     map(column_to_rownames, 'ID')
   
-  for(i in rf_tools$var_lexicon$variable) {
+  for(i in rf_tools$var_lexicon$variable[rf_tools$var_lexicon$variable != 'score']) {
     
     rf_tools$analysis_tbl <- rf_tools$analysis_tbl %>% 
       map(mutate,
@@ -166,8 +164,8 @@
 
   rf_tools$rf_models$IBK_0 <- rfsrc(formula = rf_tools$formula, 
                                      data = rf_tools$analysis_tbl$IBK_0, 
-                                     mtry = 5, 
-                                     nodesize = 2, 
+                                     mtry = 3, 
+                                     nodesize = 6, 
                                      splitrule = 'logrankscore', 
                                      ntree = 1000)
   
@@ -194,7 +192,7 @@
              values_to = 'c_index') %>% 
     mutate(c_index = 1 - c_index)
   
-  ## brier scores
+  ## integrated Brier scores
   
   rf_tools$fit_stats$ibs <- 
     rf_tools$rf_predictions %>% 
@@ -202,7 +200,7 @@
     map_dbl(~.x$crps.std) %>% 
     compress(names_to = 'cohort', 
              values = 'ibs_model')
-  
+
   ## a common table
   
   rf_tools$fit_stats <- rf_tools$fit_stats %>% 

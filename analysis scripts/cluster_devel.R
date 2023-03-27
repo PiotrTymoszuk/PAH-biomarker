@@ -250,6 +250,7 @@
            geom_vline(xintercept = 2, 
                       linetype = 'dashed', 
                       color = 'coral3') +
+           scale_x_continuous(breaks = 1:10) +
            globals$common_theme + 
            labs(title = z, 
                 subtitle = 'PAM clustering, cosine distance', 

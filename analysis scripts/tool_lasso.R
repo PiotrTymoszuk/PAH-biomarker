@@ -1,5 +1,4 @@
-# LASSO ensemble of the established risk assessment tools
-# and of the newly developed Elastic Net score
+# Ridge ensemble of the established risk assessment tools
 
   insert_head()
 
@@ -20,9 +19,7 @@
   ## analysis variables
   
   lasso_tools$var_lexicon <- 
-    rbind(tibble(variable = 'score', 
-                 label = 'ElasticNet'), 
-          pah_study$comparators[c('variable', 'label')]) %>% 
+    pah_study$comparators[c('variable', 'label')] %>% 
     filter(!stri_detect(variable, fixed = 'Reveal'))
 
 # Analysis tables -------
@@ -34,15 +31,9 @@
   lasso_tools$analysis_tbl <- pah_study$data_master %>% 
     select(ID, timepoint, any_of(lasso_tools$var_lexicon$variable)) %>% 
     map_dfc(function(x) if(is.numeric(x)) factor(x) else x) %>% 
-    dlply('timepoint', select, -timepoint)
-  
-  ## adding the linear predictor scores of the Elastic Net
-  
-  lasso_tools$analysis_tbl <- 
-    map2(multi_cox$lp_scores %>% 
-           map(~.x[c('ID', 'score')]), 
-         lasso_tools$analysis_tbl, 
-         left_join, by = 'ID') %>% 
+    dlply('timepoint', select, -timepoint) %>% 
+    map2(pah_study[c("IBK_0", "LZ_0")], 
+         ~filter(.x, ID %in% .y$ID)) %>% 
     map(column_to_rownames, 'ID')
 
 # CV folds ------
@@ -68,7 +59,7 @@
                           foldid = .x, 
                           type.measure = 'default', 
                           family = 'cox', 
-                          alpha = 1), 
+                          alpha = 0), 
                .options = furrr_options(seed = TRUE))
   
   lasso_tools$lambda_tbl <- lasso_tools$lambda_tune %>% 
@@ -87,7 +78,7 @@
     glmnet(x = model.matrix(~., lasso_tools$analysis_tbl$IBK_0), 
            y = pah_study$surv_obj$IBK_0, 
            family = 'cox', 
-           alpha = 1, 
+           alpha = 0, 
            lambda = lasso_tools$opt_lambda$lambda)
   
   ## linear predictor scores
@@ -181,12 +172,17 @@
            regulation = ifelse(s0 < 0, 
                                'negative', 'positive'), 
            hr = exp(s0), 
-           y_txt = ifelse(!is.na(level), 
+           y_txt = ifelse(!is.na(level) & 
+                            level != '' & 
+                            !stri_detect(level, fixed = 'sec'), 
                           paste(exchange(variable, 
                                          dict = lasso_tools$var_lexicon), 
                                 level, sep = ': '), 
                           exchange(variable,
-                                   dict = lasso_tools$var_lexicon)))
+                                   dict = lasso_tools$var_lexicon)),
+           y_txt = ifelse(stri_detect(level, fixed = 'sec'), 
+                          paste0(y_txt, '\u00B2'), 
+                          y_txt))
   
   ## Forest plot
   
@@ -223,7 +219,7 @@
                            multi_cox$n_numbers$IBK_0['total'], 
                            ', Events: n = ', 
                            multi_cox$n_numbers$LZ_0['events']), 
-         x = expression('HR'[LASSO]))
+         x = expression('HR'[Ridge]))
   
 # END ------
   

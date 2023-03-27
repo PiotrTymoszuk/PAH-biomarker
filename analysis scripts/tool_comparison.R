@@ -15,7 +15,7 @@
   
   surv_tools$var_lexicon <- 
     rbind(tibble(variable = c('score', 'ensemble_score', 'RF ensemble'), 
-                 label = c('ElasticNet', 'LASSO ensemble', 'RF ensemble')), 
+                 label = c('ElasticNet', 'Ridge ensemble', 'RF ensemble')), 
           pah_study$comparators[c('variable', 'label')])
   
   ## analysis tables
@@ -97,15 +97,53 @@
   
   insert_msg('R-squared and IBS scatter plots')
   
-  ## IBS: integrated Brier score
+  ## IBS: integrated Brier score, R-squared and C-index
   
   surv_tools$fit_plots <- 
-    list(x = surv_tools$fit_stats, 
+    list(x = surv_tools$fit_stats %>% 
+           map(filter, 
+               !stri_detect(variable, 
+                            regex = 'Reveal|RF')), 
+         y = c('Training: IBK', 'Test: LZ/W')) %>% 
+    pmap(function(x, y) x %>% 
+           ggplot(aes(x = 1 - ibs_model, 
+                      y = c_index, 
+                      size = raw_rsq, 
+                      fill = raw_rsq)) + 
+           geom_point(shape = 21) + 
+           geom_text_repel(aes(label = exchange(variable, 
+                                                dict = surv_tools$var_lexicon)), 
+                           size = 2.75, 
+                           force = 1.4) + 
+           scale_radius(limits = c(0, 1), 
+                        range = c(1, 4.5), 
+                        name = expression('R'^2)) + 
+           scale_fill_gradient2(low = 'steelblue', 
+                                mid = 'white', 
+                                high = 'firebrick', 
+                                midpoint = 0.5, 
+                                limits = c(0, 1), 
+                                name = expression('R'^2)) + 
+           guides(fill = 'legend', 
+                  size = 'legend') + 
+           globals$common_theme + 
+           labs(title = y, 
+                x = '1 - IBS', 
+                y = 'C-index'))
+  
+  ## IBS and C-index: with the RF ensemble (figure for the Reviewers)
+  
+  surv_tools$fit_plots_rf <- 
+    list(x = surv_tools$fit_stats %>% 
+           map(filter, 
+               !stri_detect(variable, 
+                            regex = '^Reveal')), 
          y = c('Training: IBK', 'Test: LZ/W'), 
-         z = globals$center_colors[names(surv_tools$analysis_tbl)]) %>% 
+         z = globals$center_colors[c("IBK_0", "LZ_0")]) %>% 
     pmap(function(x, y, z) x %>% 
            ggplot(aes(x = 1 - ibs_model, 
-                      y = c_index)) + 
+                      y = c_index, 
+                      fill = z)) + 
            geom_point(shape = 21, 
                       size = 2, 
                       fill = z) + 
@@ -116,7 +154,7 @@
            labs(title = y, 
                 x = '1 - IBS', 
                 y = 'C-index'))
-  
+
 # Assessing calibration of the score and established tools -------
   
   insert_msg('Assessing calibration of the score and the tools')

@@ -64,30 +64,24 @@
   
   insert_msg('Figure 3: Risk tool performance comparison')
   
-  paper_figures$risk_tools <- surv_tools$fit_plots
-  
-  ## the RF ensemble is presented only in a figure for the Reviewer 2
-  
-  for(i in names(paper_figures$risk_tools)) {
-    
-    paper_figures$risk_tools[[i]]$data <- 
-      paper_figures$risk_tools[[i]]$data %>% 
-      filter(!stri_detect(variable, fixed = 'RF'))
-    
-  }
-  
-  paper_figures$risk_tools <- paper_figures$risk_tools %>% 
+  paper_figures$risk_tools <- surv_tools$fit_plots %>% 
+    map(~.x + 
+          theme(legend.position = 'none')) %>% 
     plot_grid(plotlist = ., 
               ncol = 2, 
               align = 'hv', 
               axis = 'tblr', 
               labels = LETTERS, 
               label_size = 10) %>% 
+    plot_grid(get_legend(surv_tools$fit_plots[[1]] +
+                           theme(legend.position = 'bottom')), 
+              nrow = 2, 
+              rel_heights = c(0.9, 0.1)) %>%  
     as_figure(label = 'figure_3_risk_tool_performance', 
               ref_name = 'risk_tools', 
               caption = paste('Performance of PAH risk assessment tools.'), 
               w = 180, 
-              h = 90)
+              h = 105)
 
 # Figure 4: clustering of the participants -----
   
@@ -401,7 +395,7 @@
   
   insert_msg('Figure R2: Random Forest ensemble')
   
-  rev_figures$rf_ensemble <- surv_tools$fit_plots %>% 
+  rev_figures$rf_ensemble <- surv_tools$fit_plots_rf %>% 
     plot_grid(plotlist = ., 
               ncol = 2, 
               align = 'hv') %>% 
@@ -429,11 +423,11 @@
          path = './paper/figures', 
          device = cairo_pdf)
   
-  #paper_figures %>% 
-   # walk(pickle, 
-    #     format = 'png', 
-      #   path = './paper/figures', 
-      #   dpi = 600)
+  paper_figures %>% 
+    walk(pickle, 
+         format = 'png', 
+         path = './paper/figures', 
+         dpi = 600)
   
   suppl_figures %>% 
     walk(pickle, 

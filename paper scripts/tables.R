@@ -177,7 +177,7 @@
     surv_tools$fit_stats %>% 
     map_dfr(filter, 
             !stri_detect(variable, fixed = 'RF'), 
-            !stri_detect(variable, fixed = 'reveal')) %>% 
+            !stri_detect(variable, fixed = 'Reveal')) %>% 
     transmute(cohort = globals$center_labs[cohort], 
            variable = exchange(variable, 
                                dict = surv_tools$var_lexicon), 

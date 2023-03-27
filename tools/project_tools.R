@@ -396,8 +396,8 @@
               regex = '^no.*\\nyes:\\s{1}', 
               replacement = '') %>% 
       map_dfc(stri_replace, 
-              fixed = 'Range', 
-              replacement = 'range')
+              fixed = 'Range: ', 
+              replacement = '')
     
   }
   
